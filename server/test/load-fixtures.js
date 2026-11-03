@@ -11,7 +11,7 @@ const { bankCsv, deviceToken } = await loadFixtures();
 fs.mkdirSync('tmp', { recursive: true });
 fs.writeFileSync('tmp/bank-statement.csv', bankCsv);
 fs.writeFileSync('tmp/gate-device-token.txt', deviceToken);
-console.log('Development fixtures loaded. Sign in with these numbers; codes print in the API log.');
+console.log('Development fixtures loaded. Sign in with these numbers; without SMS the code is shown on the sign-in screen.');
 console.table(ACCOUNTS);
 console.log(`Guard PIN: ${GUARD_PIN}. Bank statement: tmp/bank-statement.csv`);
 await closePool();
