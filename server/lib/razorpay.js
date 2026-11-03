@@ -56,6 +56,16 @@ export async function settleOrder(orderId, paymentId, source) {
     if (p.status === 'failed') await q("UPDATE payment_orders SET status = 'failed' WHERE id = $1 AND status = 'created'", [orderId]);
     return { ok: false, status: p.status };
   }
+  return completeOrder(orderId, {
+    amountPaise: p.amount, gatewayPaymentId: p.id, source, provider: 'Razorpay',
+    reference: p.method ? `${p.method.toUpperCase()} via Razorpay` : 'Razorpay',
+    utr: p.acquirer_data?.rrn || p.acquirer_data?.upi_transaction_id || null,
+  });
+}
+
+// Records a paid order exactly once, whichever confirmation arrives first.
+// Shared by Razorpay and the placeholder gateway.
+export function completeOrder(orderId, { amountPaise, gatewayPaymentId, reference, utr = null, source, provider }) {
   return tx(async () => {
     const order = await one('SELECT * FROM payment_orders WHERE id = $1 FOR UPDATE', [orderId]);
     if (!order) throw new HttpError(404, 'Unknown order');
@@ -63,13 +73,11 @@ export async function settleOrder(orderId, paymentId, source) {
       const existing = await one('SELECT id, receipt_no FROM payments WHERE id = $1', [order.payment_id]);
       return { ok: true, paymentId: existing.id, receiptNo: existing.receipt_no, already: true };
     }
-    if (p.amount !== order.amount * 100) throw new HttpError(400, 'Paid amount does not match the order.');
+    if (amountPaise !== order.amount * 100) throw new HttpError(400, 'Paid amount does not match the order.');
     const user = await one('SELECT * FROM users WHERE id = $1', [order.user_id]);
     const rec = await recordPayment({
-      flatId: order.flat_id, amount: order.amount, paidOn: today(), method: 'gateway',
-      reference: p.method ? `${p.method.toUpperCase()} via Razorpay` : 'Razorpay',
-      utr: p.acquirer_data?.rrn || p.acquirer_data?.upi_transaction_id || null,
-      gatewayOrderId: orderId, gatewayPaymentId: p.id, postedBy: user?.name || 'Razorpay',
+      flatId: order.flat_id, amount: order.amount, paidOn: today(), method: 'gateway', reference, utr,
+      gatewayOrderId: orderId, gatewayPaymentId, postedBy: user?.name || provider,
     }, { id: user?.id, name: `${user?.name || 'resident'} (${source})` });
     await q("UPDATE payment_orders SET status = 'paid', payment_id = $2 WHERE id = $1", [orderId, rec.id]);
     if (user) await send('push', user.phone, `Received ₹${order.amount} for ${order.flat_id}. Receipt ${rec.receipt_no}.`);

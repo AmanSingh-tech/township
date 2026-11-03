@@ -74,7 +74,7 @@ resource "aws_ecr_lifecycle_policy" "app" {
 
 # Credentials for SMS, payments, push, Sentry and Claude. Terraform creates
 # the secret but never sees the values: put them with scripts/set-secrets.sh.
-# Until it is filled, the app refuses to start.
+# Empty values run as the app's free placeholders.
 resource "aws_secretsmanager_secret" "app" {
   #checkov:skip=CKV2_AWS_57:Provider API keys (MSG91, Razorpay) cannot be rotated automatically; rotate in their dashboards, then set-secrets.sh.
   name                    = "${local.prefix}/app"

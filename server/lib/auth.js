@@ -42,14 +42,11 @@ export async function requestOtp(rawPhone, ip) {
   const code = randomDigits(6);
   await q(`INSERT INTO otps (phone, code_hash, expires_at, attempts) VALUES ($1, $2, now() + make_interval(mins => $3), 0)
     ON CONFLICT (phone) DO UPDATE SET code_hash = $2, expires_at = now() + make_interval(mins => $3), attempts = 0`, [phone, codeHash(phone, code), OTP_TTL_MIN]);
-  if (env.NODE_ENV === 'test') { testOtps.set(phone, code); return; }
-  if (smsEnabled) {
-    await sendOtpSms(phone, code);
-  } else if (env.NODE_ENV === 'development') {
-    console.log(`\n  Login code for ${phone}: ${code}  (SMS not configured; development only)\n`);
-  } else {
-    throw new HttpError(503, 'Login by SMS is not available right now.');
-  }
+  if (env.NODE_ENV === 'test') testOtps.set(phone, code);
+  if (smsEnabled) return sendOtpSms(phone, code);
+  // Placeholder for SMS: the code goes back to the sign-in screen. Only for
+  // registered numbers, as before; unknown numbers still get the plain reply.
+  return { screenCode: code };
 }
 
 export async function verifyOtp(rawPhone, code, meta) {

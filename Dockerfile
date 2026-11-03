@@ -13,7 +13,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/server ./server
 COPY package.json ./
-RUN rm -rf server/test && addgroup -S app && adduser -S app -G app
+RUN rm -rf server/test && addgroup -S app && adduser -S app -G app && mkdir -p uploads && chown app:app uploads
 USER app
 EXPOSE 4000
 HEALTHCHECK CMD wget -qO- http://localhost:4000/api/health || exit 1

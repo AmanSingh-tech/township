@@ -52,7 +52,8 @@ export function receiptPdf(r) {
   row('Received from', r.residentName || '—');
   row('Flat', r.flat_id);
   row('Date', new Date(r.paid_on + 'T00:00:00Z').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }));
-  row('Mode', r.method === 'gateway' ? 'Online (Razorpay)' : r.method === 'bank' ? 'Bank transfer' : 'Other');
+  row('Mode', r.method === 'gateway' ? (String(r.gateway_payment_id).startsWith('test_pay_') ? 'Online (test payment, no money moved)' : 'Online (Razorpay)')
+    : r.method === 'bank' ? 'Bank transfer' : 'Other');
   if (r.reference) row('Reference', r.reference, true);
   if (r.utr) row('UTR', r.utr, true);
   row('Towards', 'Maintenance charges');

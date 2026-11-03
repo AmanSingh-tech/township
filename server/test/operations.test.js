@@ -147,3 +147,30 @@ test('closing an amenity for a day cancels and refunds its bookings', async () =
   assert.equal((await call('/bookings', { token: swati, body: { amenityId: tennis.id, date: day, start: '09:00' } })).status, 409, 'closed day cannot be booked');
   assert.ok(await one("SELECT 1 FROM messages WHERE body LIKE 'Tennis court is closed%'"));
 });
+
+test('placeholder gateway: a test payment is recorded once, marked as a test, and only by its own flat', async () => {
+  const { createTestOrder, finishTestOrder, isTestPayment } = await import('../lib/placeholderPay.js');
+  const { one: row } = await import('../db.js');
+  const aamir = await row("SELECT * FROM users WHERE phone = $1", [ACCOUNTS.aamir]);
+  const swati = await row("SELECT * FROM users WHERE phone = $1", [ACCOUNTS.swati]);
+  const o = await createTestOrder({ flatId: aamir.flat_id, userId: aamir.id, amount: 500 });
+  await assert.rejects(finishTestOrder(o.orderId, 'success', swati), /not found/, 'another flat cannot complete it');
+  const ok = await finishTestOrder(o.orderId, 'success', aamir);
+  assert.equal(ok.ok, true);
+  const again = await finishTestOrder(o.orderId, 'success', aamir);
+  assert.equal(again.paymentId, ok.paymentId, 'recorded once');
+  const p = await row('SELECT * FROM payments WHERE id = $1', [ok.paymentId]);
+  assert.equal(p.amount, 500);
+  assert.ok(isTestPayment(p.gateway_payment_id));
+  assert.match(p.reference, /no money moved/);
+  const declined = await createTestOrder({ flatId: aamir.flat_id, userId: aamir.id, amount: 500 });
+  assert.equal((await finishTestOrder(declined.orderId, 'failure', aamir)).ok, false);
+  assert.equal((await row('SELECT status FROM payment_orders WHERE id = $1', [declined.orderId])).status, 'failed');
+});
+
+test('without SMS the login code comes back to the sign-in screen, for registered numbers only', async () => {
+  const known = await call('/auth/otp', { body: { phone: ACCOUNTS.committee } });
+  assert.match(known.body.screenCode, /^\d{6}$/);
+  const unknown = await call('/auth/otp', { body: { phone: '9123400000' } });
+  assert.deepEqual(unknown.body, { sent: true });
+});

@@ -7,7 +7,32 @@ Society management for a 2,400-flat gated township:
 - **Committee:** a monthly report built from the ledger.
 - **Gates:** a guard tablet app that keeps working through network drops.
 
-## Run locally
+## Runs free
+
+Nothing paid is needed. Each paid service has a free placeholder that is used automatically when its
+credentials are missing, and each placeholder is clearly labelled where people see it:
+
+| Paid service | Free placeholder |
+|---|---|
+| SMS login codes (MSG91) | The code is shown on the sign-in screen, for registered numbers only |
+| Online payment (Razorpay) | A test gateway: same order and recording steps, a marked test checkout, receipts say "test payment, no money moved" |
+| Photo storage (S3) | The server's own disk (a Docker volume) |
+| Hosting (AWS) | `docker compose up --build` on any machine |
+| Complaint AI (Claude) | The built-in keyword classifier |
+
+Push alerts are free already (`npm run cli -- vapid-keys`). Adding real credentials later switches each service on
+with no code change.
+
+### Quickest start: everything in Docker
+
+```bash
+docker compose up --build       # app on http://localhost:4000
+```
+
+The database starts empty. For a populated township, also install Node 18+ and run
+`npm install && npm run dev:fixtures`, which loads sample flats, residents and logins into the Compose database.
+
+## Run locally (development)
 
 Needs Node 18+ and Docker.
 
@@ -20,14 +45,14 @@ cp .env.example .env          # optional locally; see Configuration
 npm run dev                   # API :4000 (migrates on start), app http://localhost:5173
 ```
 
-The database starts empty. For a fully populated local township, run `npm run dev:fixtures`. It only loads into a local database and prints the logins to use. Without SMS configured, login codes print in the API log. This happens only in development and never reaches the browser.
+The database starts empty. For a fully populated local township, run `npm run dev:fixtures`. It only loads into a local database and prints the logins to use. Without SMS configured, the login code is shown on the sign-in screen.
 
 `npm test` runs the suite against `township_test`.
 
 ## Configuration
 
-All settings come from environment variables; `.env.example` lists them. In production the server
-**refuses to start** without real SMS and Razorpay credentials. Nothing falls back to fake behaviour.
+All settings come from environment variables; `.env.example` lists them. Production needs only `DATABASE_URL`
+and `FILE_URL_SECRET`. Every paid service is optional, and the server logs which placeholders it is running with.
 
 | What | Variables | Notes |
 |---|---|---|
@@ -35,8 +60,8 @@ All settings come from environment variables; `.env.example` lists them. In prod
 | SMS login codes | `SMS_PROVIDER=msg91`, `MSG91_AUTH_KEY`, `MSG91_OTP_TEMPLATE_ID` | DLT-approved template containing `##otp##` |
 | Safety alerts by SMS | `MSG91_ALERT_TEMPLATE_ID` | Optional; template with `##message##` |
 | Payments | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Test keys work end to end |
-| Photos | `STORAGE=s3`, `S3_BUCKET`, `AWS_REGION`, `FILE_URL_SECRET` | S3 bucket in ap-south-1. Required in production |
-| Push alerts | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Generate with `npm run cli -- vapid-keys`. Required in production |
+| Photos | `STORAGE=s3`, `S3_BUCKET`, `AWS_REGION`, `FILE_URL_SECRET` | Optional; without S3, photos are stored under `STORAGE_DIR` on the server |
+| Push alerts | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Free. Generate with `npm run cli -- vapid-keys` |
 | Complaint AI | `ANTHROPIC_API_KEY` | Optional; a local keyword model is used without it |
 | Behind a load balancer | `TRUST_PROXY=true` | So rate limits see real client addresses |
 
@@ -45,8 +70,8 @@ Set the Razorpay webhook to `https://<domain>/api/payments/razorpay/webhook` for
 
 ## Going live
 
-1. Deploy. For AWS Mumbai, [infra/aws/README.md](infra/aws/README.md) has the Terraform and the step-by-step. Elsewhere,
-   run the image (`docker build -t township .`) with the variables above, behind HTTPS.
+1. Deploy. Free: `docker compose up --build`. For a paid production setup on AWS Mumbai,
+   [infra/aws/README.md](infra/aws/README.md) has the Terraform and the step-by-step.
 2. Create the first administrator:
    `npm run cli -- create-admin --name "Full Name" --phone 98XXXXXXXX`
 3. Sign in as that admin and set up the society. Under **Admin**:

@@ -12,12 +12,16 @@ export default function Login() {
   const [step, setStep] = useState('phone');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [screenCode, setScreenCode] = useState('');
   const digits = phone.replace(/\D/g, '').slice(-10);
 
   async function sendOtp(e) {
     e?.preventDefault();
     setError(''); setBusy(true);
-    try { await api('/auth/otp', { method: 'POST', body: { phone: digits } }); setStep('code'); setCode(''); }
+    try {
+      const r = await api('/auth/otp', { method: 'POST', body: { phone: digits } });
+      setScreenCode(r.screenCode || ''); setStep('code'); setCode('');
+    }
     catch (e) { setError(e.message); } finally { setBusy(false); }
   }
   async function verify(e) {
@@ -52,6 +56,12 @@ export default function Login() {
         ) : (
           <form className="stack" onSubmit={verify}>
             <h1>{t('otpSent', { p: digits.replace(/(\d{5})(\d{5})/, '$1 $2') })}</h1>
+            {screenCode && (
+              <p className="notice warn small" role="status">
+                SMS is not set up (placeholder), so the code is shown here instead: <b className="mono">{screenCode}</b>{' '}
+                <button type="button" className="link small" onClick={() => setCode(screenCode)}>Fill it in</button>
+              </p>
+            )}
             <input className="input otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} aria-label="Code" autoFocus />
             {error && <p className="error">{error}</p>}

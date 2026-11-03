@@ -7,6 +7,8 @@ import { Sheet, Icon, useToast } from '../../ui.jsx';
 
 // Razorpay Checkout. The browser only starts the payment; the server checks
 // the signature and fetches the payment from Razorpay before recording it.
+// Without Razorpay keys the server runs a placeholder gateway instead: the
+// same order and recording steps, shown as a clearly marked test checkout.
 function loadCheckout() {
   if (window.Razorpay) return Promise.resolve();
   return new Promise((resolve, reject) => {
@@ -27,17 +29,37 @@ export default function PaySheet({ open, onClose, due, onPaid }) {
   const [other, setOther] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [testOrder, setTestOrder] = useState(null);
 
   useEffect(() => {
     if (!open) return;
-    setMode('full'); setOther(''); setError('');
+    setMode('full'); setOther(''); setError(''); setTestOrder(null); setBusy(false);
     api('/pay/config').then(setConfig).catch((e) => setError(e.message));
   }, [open]);
   const amount = mode === 'full' ? due : Math.round(Number(other) || 0);
 
+  function paid(r) {
+    onPaid?.(r); onClose();
+    nav(`/receipts/${r.paymentId}?new=1`);
+  }
+
+  async function finishTest(outcome) {
+    setError(''); setBusy(true);
+    try {
+      const r = await api('/pay/test-complete', { method: 'POST', body: { orderId: testOrder.orderId, outcome } });
+      if (!r.ok) { setError('The test payment was declined. No money was taken.'); setTestOrder(null); setBusy(false); return; }
+      paid(r);
+    } catch (e) { setError(e.message); setBusy(false); }
+  }
+
   async function pay() {
     setError(''); setBusy(true);
     try {
+      if (config.provider === 'placeholder') {
+        setTestOrder(await api('/pay/order', { method: 'POST', body: { amount } }));
+        setBusy(false);
+        return;
+      }
       await loadCheckout();
       const order = await api('/pay/order', { method: 'POST', body: { amount } });
       const rzp = new window.Razorpay({
@@ -53,8 +75,7 @@ export default function PaySheet({ open, onClose, due, onPaid }) {
           try {
             const r = await api('/pay/verify', { method: 'POST', body: resp });
             if (!r.ok) throw new Error('The payment did not go through. No money was taken.');
-            onPaid?.(r); onClose();
-            nav(`/receipts/${r.paymentId}?new=1`);
+            paid(r);
           } catch (e) {
             // The webhook still records a captured payment; tell the resident to check back.
             toast(e.message || 'We are confirming your payment. Check your receipts in a minute.');
@@ -71,7 +92,23 @@ export default function PaySheet({ open, onClose, due, onPaid }) {
   const bank = config?.bankDetails;
   return (
     <Sheet open={open} onClose={onClose} title={t('payTitle')} center>
-      {!config ? <p className="faint">…</p> : config.online ? (
+      {!config ? <p className="faint">…</p> : testOrder ? (
+        <div className="stack">
+          <p className="notice warn small" role="status">
+            Test payment gateway (placeholder). Online payment is not connected, so <b>no money moves</b>. The payment is
+            recorded and marked as a test on the receipt.
+          </p>
+          <div className="receipt" style={{ padding: 16 }}>
+            <dl style={{ margin: 0 }}>
+              <dt>Amount</dt><dd>{inr(testOrder.amount)}</dd>
+              <dt>Order</dt><dd className="mono tiny">{testOrder.orderId}</dd>
+            </dl>
+          </div>
+          {error && <p className="error">{error}</p>}
+          <button className="btn primary lg block" disabled={busy} onClick={() => finishTest('success')}>Complete test payment</button>
+          <button className="btn block" disabled={busy} onClick={() => finishTest('failure')}>Decline (test a failed payment)</button>
+        </div>
+      ) : config.online ? (
         <div className="stack">
           <div className="chips">
             <button className={`chip ${mode === 'full' ? 'on' : ''}`} onClick={() => setMode('full')}>{t('payFull')} · {inr(due)}</button>
@@ -82,7 +119,18 @@ export default function PaySheet({ open, onClose, due, onPaid }) {
           )}
           {error && <p className="error">{error}</p>}
           <button className="btn primary lg block" disabled={busy || amount <= 0} onClick={pay}>{t('payNow')} {amount > 0 ? inr(amount) : ''}</button>
-          <p className="faint tiny row" style={{ gap: 6, justifyContent: 'center' }}><Icon name="shield" size={14} />UPI, cards and net banking via Razorpay</p>
+          <p className="faint tiny row" style={{ gap: 6, justifyContent: 'center' }}><Icon name="shield" size={14} />
+            {config.provider === 'placeholder' ? 'Test gateway: no real money moves' : 'UPI, cards and net banking via Razorpay'}</p>
+          {bank && (
+            <details className="small muted">
+              <summary>Pay by UPI or bank transfer instead</summary>
+              <p>Write your flat number <b>in the remarks</b>; it is matched to your flat automatically.</p>
+              <dl style={{ margin: 0 }}>
+                {bank.upiId && <><dt>UPI ID</dt><dd className="mono">{bank.upiId}</dd></>}
+                <dt>Account</dt><dd>{bank.accountName} · <span className="mono">{bank.accountNumber}</span> · IFSC <span className="mono">{bank.ifsc}</span></dd>
+              </dl>
+            </details>
+          )}
         </div>
       ) : (
         <div className="stack">

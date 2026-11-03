@@ -1,6 +1,6 @@
 // Reads and validates configuration from the environment once, at startup.
-// In production, missing credentials for SMS or payments stop the server
-// instead of silently falling back to anything fake.
+// Paid services are optional: without their credentials the app runs on free
+// placeholders, each clearly labelled where people see it and logged at start.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -67,19 +67,27 @@ export const isProd = env.NODE_ENV === 'production';
 export const smsEnabled = env.SMS_PROVIDER === 'msg91' && !!env.MSG91_AUTH_KEY && !!env.MSG91_OTP_TEMPLATE_ID;
 export const paymentsEnabled = !!env.RAZORPAY_KEY_ID && !!env.RAZORPAY_KEY_SECRET;
 export const pushEnabled = !!env.VAPID_PUBLIC_KEY && !!env.VAPID_PRIVATE_KEY;
+// Placeholders: login codes shown on the sign-in screen instead of sent by
+// SMS; online payments through a test gateway that moves no money.
+export const loginCodeOnScreen = !smsEnabled;
+export const paymentProvider = paymentsEnabled ? 'razorpay' : 'placeholder';
 
 export function checkProductionConfig() {
   if (!isProd) return;
   const missing = [];
-  if (!smsEnabled) missing.push('SMS_PROVIDER=msg91, MSG91_AUTH_KEY, MSG91_OTP_TEMPLATE_ID');
-  if (!paymentsEnabled) missing.push('RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET');
-  if (!env.RAZORPAY_WEBHOOK_SECRET) missing.push('RAZORPAY_WEBHOOK_SECRET');
   if (!e.DATABASE_URL) missing.push('DATABASE_URL (or PGHOST, PGUSER, PGPASSWORD, PGDATABASE)');
-  if (env.STORAGE !== 's3' || !env.S3_BUCKET) missing.push('STORAGE=s3, S3_BUCKET (photos must not live on the server disk)');
   if (!env.FILE_URL_SECRET || env.FILE_URL_SECRET.length < 32) missing.push('FILE_URL_SECRET (32+ random characters)');
-  if (!pushEnabled) missing.push('VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY (run: npm run cli -- vapid-keys)');
+  if (paymentsEnabled && !env.RAZORPAY_WEBHOOK_SECRET) missing.push('RAZORPAY_WEBHOOK_SECRET (needed with Razorpay keys)');
+  if (env.STORAGE === 's3' && !env.S3_BUCKET) missing.push('S3_BUCKET (needed with STORAGE=s3)');
   if (missing.length) {
     console.error(`Refusing to start in production. Missing configuration:\n  ${missing.join('\n  ')}`);
     process.exit(1);
   }
+  const placeholders = [
+    !smsEnabled && 'SMS: not set up; login codes are shown on the sign-in screen',
+    !paymentsEnabled && 'Payments: Razorpay not set up; online payment uses the test gateway (no money moves)',
+    env.STORAGE !== 's3' && `Photos: stored on this server's disk (${env.STORAGE_DIR})`,
+    !pushEnabled && 'Push alerts: off (npm run cli -- vapid-keys)',
+  ].filter(Boolean);
+  if (placeholders.length) console.warn(`Running with placeholders:\n  ${placeholders.join('\n  ')}`);
 }

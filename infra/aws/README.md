@@ -1,5 +1,8 @@
 # Township on AWS (Mumbai)
 
+> **Optional and paid** (roughly US$250–300 a month). The app runs free without any of this: see "Runs free" in the
+> main README.
+
 Terraform for production in `ap-south-1`, with backup copies in Hyderabad (`ap-south-2`). All residents' data
 stays in India.
 
@@ -102,7 +105,8 @@ You need: an AWS account, the AWS CLI signed in as an administrator, Terraform 1
    - creates `township_app`,
    - runs the integrity checks.
 
-   Then the app starts. Until the secrets are complete, the app logs `Refusing to start` with the list of what's missing, and the
+   Then the app starts. Any provider left empty runs as its free placeholder, listed in the log under
+   `Running with placeholders`. A missing database setting or migration logs `Refusing to start`, and the
    `refused-start` alarm fires.
 7. **First administrator:** `scripts/create-admin.sh "Full Name" 98XXXXXXXX`, then sign in with the SMS code and set the society up
    (see "Going live" in the main README).

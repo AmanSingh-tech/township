@@ -2,7 +2,8 @@ import { Router } from 'express';
 import crypto from 'node:crypto';
 import { h, allow } from '../http.js';
 import { q, one, many, val, tx } from '../db.js';
-import { paymentsEnabled } from '../env.js';
+import { paymentProvider } from '../env.js';
+import { createTestOrder, finishTestOrder } from '../lib/placeholderPay.js';
 import { flatStatus } from '../lib/billing.js';
 import { getSettings } from '../lib/settings.js';
 import { createComplaint, logEvent } from '../lib/complaints.js';
@@ -75,14 +76,20 @@ r.get('/bills', resident, h(async (req, res) => {
 // ---- Payments (Razorpay) --------------------------------------------------------
 r.get('/pay/config', resident, h(async (req, res) => {
   const s = await getSettings();
-  res.json({ online: paymentsEnabled, bankDetails: s.bankDetails, societyName: s.societyName });
+  res.json({ online: true, provider: paymentProvider, bankDetails: s.bankDetails, societyName: s.societyName });
 }));
 r.post('/pay/order', resident, h(async (req, res) => {
   const st = await flatStatus(req.user.flat_id);
   const amount = Math.round(Number(req.body.amount) || st.totalDue);
   if (!(amount >= 1)) throw new HttpError(400, 'Nothing to pay.');
   if (amount > Math.max(st.totalDue, 1) * 12 || amount > 500000) throw new HttpError(400, 'Amount is much higher than your dues.');
-  res.json({ ...(await createOrder({ flatId: req.user.flat_id, userId: req.user.id, amount })), prefill: { name: req.user.name, contact: req.user.phone } });
+  const make = paymentProvider === 'razorpay' ? createOrder : createTestOrder;
+  res.json({ ...(await make({ flatId: req.user.flat_id, userId: req.user.id, amount })), provider: paymentProvider, prefill: { name: req.user.name, contact: req.user.phone } });
+}));
+// Placeholder gateway only: the resident's choice on the test checkout.
+r.post('/pay/test-complete', resident, h(async (req, res) => {
+  if (paymentProvider !== 'placeholder') throw new HttpError(404, 'Not found');
+  res.json(await finishTestOrder(req.body.orderId, req.body.outcome, req.user));
 }));
 r.post('/pay/verify', resident, h(async (req, res) => {
   const { razorpay_order_id: orderId, razorpay_payment_id: paymentId, razorpay_signature: sig } = req.body;

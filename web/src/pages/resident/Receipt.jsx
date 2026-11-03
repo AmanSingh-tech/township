@@ -28,7 +28,7 @@ export default function Receipt() {
           <dt>Flat</dt><dd>{r.flat_id}</dd>
           <dt>Received from</dt><dd>{r.residentName}</dd>
           <dt>Date</dt><dd>{date(r.paid_on, { day: 'numeric', month: 'long', year: 'numeric' })}</dd>
-          <dt>Mode</dt><dd>{r.method === 'gateway' ? 'Online (Razorpay)' : 'Bank transfer'}</dd>
+          <dt>Mode</dt><dd>{r.method !== 'gateway' ? 'Bank transfer' : String(r.gateway_payment_id).startsWith('test_pay_') ? 'Online (test payment, no money moved)' : 'Online (Razorpay)'}</dd>
           {r.reference && <><dt>Reference</dt><dd className="mono">{r.reference}</dd></>}
           {r.utr && <><dt>UTR</dt><dd className="mono">{r.utr}</dd></>}
           <dt>Balance after this payment</dt><dd>{inr(r.balanceNow)}</dd>

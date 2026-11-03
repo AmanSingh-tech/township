@@ -1,5 +1,8 @@
-# Local PostgreSQL for development and tests. Production uses a managed
-# instance (RDS, ap-south-1); point DATABASE_URL at it instead.
+# The whole app on one machine, free: PostgreSQL plus the app.
+#   docker compose up --build        app on http://localhost:4000
+#   docker compose up -d db          just the database, for npm run dev
+# Paid services are off: login codes show on the sign-in screen, online
+# payment uses the test gateway, photos are stored in the uploads volume.
 services:
   db:
     image: postgres:16-alpine
@@ -15,5 +18,26 @@ services:
       test: ["CMD-SHELL", "pg_isready -U township"]
       interval: 5s
       retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://township:township@db:5432/township
+      PUBLIC_URL: http://localhost:4000
+      STORAGE: local
+      STORAGE_DIR: /app/uploads
+      # Signs photo links. Set your own for anything beyond a local run.
+      FILE_URL_SECRET: ${FILE_URL_SECRET:-local-only-change-me-0123456789abcdef}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+    ports:
+      - "4000:4000"
+    volumes:
+      - township-uploads:/app/uploads
+
 volumes:
   township-pg:
+  township-uploads:
