@@ -1,0 +1,19 @@
+# Local PostgreSQL for development and tests. Production uses a managed
+# instance (RDS, ap-south-1); point DATABASE_URL at it instead.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: township
+      POSTGRES_PASSWORD: township
+      POSTGRES_DB: township
+    ports:
+      - "5440:5432"
+    volumes:
+      - township-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U township"]
+      interval: 5s
+      retries: 10
+volumes:
+  township-pg:

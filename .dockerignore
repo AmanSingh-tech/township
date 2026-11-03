@@ -1,0 +1,12 @@
+node_modules
+dist
+tmp
+.env
+.env.test
+.git
+uploads
+data
+infra
+load
+e2e
+server/test

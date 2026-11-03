@@ -1,0 +1,83 @@
+# Every push and pull request: server tests, browser tests, a production
+# image build, dependency and infrastructure checks. On main, when the AWS
+# deploy role is configured, it also deploys (migrations first, then a
+# rolling update that rolls back by itself if the new version is unhealthy).
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: township
+          POSTGRES_PASSWORD: township
+          POSTGRES_DB: township_test
+        ports: ["5440:5432"]
+        options: >-
+          --health-cmd "pg_isready -U township" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm test
+      - name: Browser tests
+        run: npm run test:e2e
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t township:ci .
+      - name: Refuses to start without production configuration
+        run: |
+          out=$(docker run --rm township:ci 2>&1 || true)
+          echo "$out"
+          grep -q "Refusing to start in production" <<<"$out"
+
+  infra:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/aws
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate
+      - name: Security scan
+        run: docker run --rm -v "$PWD":/w bridgecrew/checkov:3.2.255 -d /w --framework terraform --quiet --compact
+
+  deploy:
+    needs: [test, image, infra]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-south-1
+      - run: infra/aws/scripts/deploy.sh "${GITHUB_SHA::12}"

@@ -1,0 +1,12 @@
+node_modules
+dist
+data/*.db*
+.env
+.env.test
+tmp
+uploads
+infra/aws/.terraform
+infra/aws/.tfhome
+infra/aws/backend.hcl
+infra/aws/*.tfvars
+!infra/aws/example.tfvars
