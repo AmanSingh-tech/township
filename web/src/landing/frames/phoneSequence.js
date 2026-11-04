@@ -104,11 +104,15 @@ function backTexture(s) {
   });
   ctx.beginPath(); ctx.arc(90, 90, 5, 0, Math.PI * 2); ctx.fillStyle = '#e9e3cf'; ctx.fill();
 
-  // Mark: three towers.
+  // Mark: the logo's T-shaped tower between two shorter ones, and a sun.
   const cx = W / 2, cy = H / 2;
-  [[-22, 34], [0, 52], [22, 26]].forEach(([dx, h]) => {
-    rr(ctx, cx + dx - 8, cy + 26 - h, 16, h, 3); ctx.fillStyle = 'rgba(255,255,255,0.78)'; ctx.fill();
-  });
+  ctx.fillStyle = 'rgba(219,168,226,0.55)';
+  rr(ctx, cx - 30, cy - 4, 14, 30, 3); ctx.fill();
+  rr(ctx, cx + 16, cy - 10, 14, 36, 3); ctx.fill();
+  ctx.fillStyle = 'rgba(246,226,249,0.9)';
+  rr(ctx, cx - 7, cy - 22, 14, 48, 3); ctx.fill();
+  rr(ctx, cx - 21, cy - 28, 42, 11, 5); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 26, cy - 34, 5, 0, Math.PI * 2); ctx.fillStyle = 'rgba(247,200,168,0.9)'; ctx.fill();
   text(ctx, 'Township', cx, cy + 56, '600 13px Inter', 'rgba(255,255,255,0.55)', 'center');
   return c;
 }
