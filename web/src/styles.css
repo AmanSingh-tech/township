@@ -392,3 +392,4 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 .gate .g-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; }
 @media (max-width: 900px) { .gate .g-grid { grid-template-columns: 1fr; } }
 .gate .g-dpdp { margin-top: auto; font-size: 15px; color: var(--g-ink-2); border-top: 1px solid var(--g-line); padding-top: 14px; }
+.lp-loading { min-height: 100dvh; background: #0a0a0c; }

@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { getSession } from './api.js';
 import Login from './pages/Login.jsx';
 import ResidentShell from './pages/resident/Shell.jsx';
@@ -25,11 +26,15 @@ import ImportRegister from './pages/desk/ImportRegister.jsx';
 import TallyExport from './pages/desk/TallyExport.jsx';
 import Bookings from './pages/desk/Bookings.jsx';
 
+// The front page carries GSAP, so it loads on its own and never weighs on the app.
+const Landing = lazy(() => import('./landing/Landing.jsx'));
+
 export const homeFor = (role) => ({ resident: '/', helpdesk: '/desk', accounts: '/desk/matching', committee: '/desk/report', admin: '/desk', guard: '/gate' }[role] || '/login');
 
 function Guard({ roles, children }) {
   const s = getSession();
-  if (!s) return <Navigate to="/login" replace />;
+  const { pathname } = useLocation();
+  if (!s) return <Navigate to={pathname === '/' ? '/welcome' : '/login'} replace />;
   if (!roles.includes(s.user.role)) return <Navigate to={homeFor(s.user.role)} replace />;
   return children;
 }
@@ -38,6 +43,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/welcome" element={<Suspense fallback={<div className="lp-loading" />}><Landing /></Suspense>} />
       <Route element={<Guard roles={['resident']}><ResidentShell /></Guard>}>
         <Route index element={<Home />} />
         <Route path="bills" element={<Bills />} />
