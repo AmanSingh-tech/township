@@ -86,6 +86,7 @@ export default function Matching() {
   const fileRef = useRef();
   const { data: imports, reload: reloadImports } = useApi('/desk/bank/imports');
   const { data: queue, reload: reloadQueue } = useApi('/desk/bank/queue');
+  const { data: meta } = useApi('/desk/meta');
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [shown, setShown] = useState(null);
@@ -101,6 +102,14 @@ export default function Matching() {
     } catch (e) { toast(e.message); } finally { setBusy(false); }
   }
   async function readFile(f) { if (f) upload(await f.text(), f.name); }
+  async function downloadSample() {
+    try {
+      const res = await api('/desk/bank/sample.csv', { raw: true });
+      if (!res.ok) throw new Error('The sample statement is not available.');
+      const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(await res.blob()), download: 'sample-bank-statement.csv' });
+      a.click(); URL.revokeObjectURL(a.href);
+    } catch (e) { toast(e.message); }
+  }
   const done = () => { reloadQueue(); reloadImports(); refreshCounts(); setShown(null); };
   const sum = (rows, s) => rows.filter((r) => s.includes(r.status)).reduce((a, r) => a + r.amount, 0);
 
@@ -120,6 +129,11 @@ export default function Matching() {
           <input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => { readFile(e.target.files[0]); e.target.value = ''; }} />
           <button className="btn" disabled={busy} onClick={() => fileRef.current.click()}>{busy ? 'Matching…' : 'Choose file'}</button>
         </div>
+        {meta?.demoStatement && (
+          <p className="faint small" style={{ marginTop: 12 }}>
+            Demo: <button className="link small" onClick={downloadSample}>download the sample statement</button> made from the sample flats, then drop it here.
+          </p>
+        )}
       </div>
 
       <section>

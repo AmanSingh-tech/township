@@ -6,7 +6,7 @@
     "dev": "concurrently -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "node --watch server/index.js",
     "dev:web": "vite",
-    "dev:fixtures": "node server/test/load-fixtures.js",
+    "dev:fixtures": "node server/demo/load-fixtures.js",
     "build": "vite build",
     "start": "NODE_ENV=production node server/index.js",
     "cli": "node server/cli.js",

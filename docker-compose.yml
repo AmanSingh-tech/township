@@ -28,6 +28,8 @@ services:
       DATABASE_URL: postgres://township:township@db:5432/township
       PUBLIC_URL: http://localhost:4000
       STORAGE: local
+      # Loads the sample township on first start (only into an empty database).
+      DEMO_DATA: ${DEMO_DATA:-true}
       STORAGE_DIR: /app/uploads
       # Signs photo links. Set your own for anything beyond a local run.
       FILE_URL_SECRET: ${FILE_URL_SECRET:-local-only-change-me-0123456789abcdef}

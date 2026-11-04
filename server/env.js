@@ -38,6 +38,8 @@ export const env = {
   MIGRATE_ON_START: e.MIGRATE_ON_START ? bool(e.MIGRATE_ON_START) : true,
   TRUST_PROXY: bool(e.TRUST_PROXY),
   TODAY: e.TODAY || null,
+  // Loads the sample township on first start, only into a database with no users.
+  DEMO_DATA: bool(e.DEMO_DATA),
 
   SMS_PROVIDER: e.SMS_PROVIDER || '',            // 'msg91'
   MSG91_AUTH_KEY: e.MSG91_AUTH_KEY || '',
@@ -88,6 +90,7 @@ export function checkProductionConfig() {
     !paymentsEnabled && 'Payments: Razorpay not set up; online payment uses the test gateway (no money moves)',
     env.STORAGE !== 's3' && `Photos: stored on this server's disk (${env.STORAGE_DIR})`,
     !pushEnabled && 'Push alerts: off (npm run cli -- vapid-keys)',
+    env.DEMO_DATA && 'Demo data: the sample township loads into an empty database',
   ].filter(Boolean);
   if (placeholders.length) console.warn(`Running with placeholders:\n  ${placeholders.join('\n  ')}`);
 }

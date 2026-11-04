@@ -8,6 +8,6 @@ const fs = await import('node:fs');
 const os = await import('node:os');
 process.env.STORAGE_DIR ||= fs.mkdtempSync(`${os.tmpdir()}/township-files-`);
 
-const fixtures = await import('./fixtures.js');
+const fixtures = await import('../demo/fixtures.js');
 export const { bankCsv, deviceToken, gatewayFlat } = await fixtures.loadFixtures();
 export const { ACCOUNTS, GUARD_PIN, closePool } = fixtures;

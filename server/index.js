@@ -1,6 +1,6 @@
 import { env, checkProductionConfig } from './env.js';
 import * as Sentry from '@sentry/node';
-import { migrate, pendingMigrations, pool } from './db.js';
+import { migrate, pendingMigrations, pool, one } from './db.js';
 import { createApp } from './app.js';
 import { startOutboxWorker } from './lib/notify.js';
 import { housekeeping } from './lib/housekeeping.js';
@@ -15,6 +15,16 @@ else {
     console.error(`Refusing to start: migrations not applied (${pending.join(', ')}). Run: npm run cli -- migrate`);
     process.exit(1);
   }
+}
+
+// Reviewer demo: the brief's sample flats and a populated township, loaded
+// only when nobody has been set up yet, so it can never replace real data.
+if (env.DEMO_DATA && !(await one('SELECT 1 FROM users LIMIT 1'))) {
+  const { loadFixtures } = await import('./demo/fixtures.js');
+  const { setSetting } = await import('./lib/settings.js');
+  const { bankCsv } = await loadFixtures();
+  await setSetting('demoBankStatement', bankCsv, 'demo');
+  console.log('Demo data loaded: sample township, logins in deployment.md.');
 }
 
 const run = () => housekeeping()

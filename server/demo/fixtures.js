@@ -1,4 +1,5 @@
-// Test and local-development fixtures. Never loaded by the application.
+// Sample township for tests, local development and the reviewer demo
+// (DEMO_DATA=true loads it once into an empty database).
 // Rebuilds the schema and fills it with a township that exercises every
 // case: the brief's three sample flats, payment habits, complaints, linked
 // lift reports, a safety escalation, visitors and a bank statement.

@@ -35,7 +35,10 @@ r.get('/complaints', complaintsRole, h(async (req, res) => {
   res.json(rows);
 }));
 r.get('/staff', complaintsRole, h(async (req, res) => res.json(await many('SELECT * FROM staff WHERE active ORDER BY skill, name'))));
-r.get('/meta', h(async (req, res) => res.json({ categories: CATEGORIES, urgencies: URGENCIES, sla: (await getSettings()).sla })));
+r.get('/meta', h(async (req, res) => {
+  const s = await getSettings();
+  res.json({ categories: CATEGORIES, urgencies: URGENCIES, sla: s.sla, demoStatement: !!s.demoBankStatement });
+}));
 
 r.patch('/complaints/:id', complaintsRole, h(async (req, res) => {
   const id = Number(req.params.id) || 0;
@@ -124,6 +127,12 @@ r.post('/bank/import', money, h(async (req, res) => {
     return imp.id;
   });
   res.json(await importSummary(id));
+}));
+// Demo only: the bank statement generated with the sample data, to try matching.
+r.get('/bank/sample.csv', money, h(async (req, res) => {
+  const csv = (await getSettings()).demoBankStatement;
+  if (!csv) throw new HttpError(404, 'No sample statement');
+  res.attachment('sample-bank-statement.csv').type('text/csv').send(csv);
 }));
 r.get('/bank/imports', money, h(async (req, res) => {
   const ids = await many('SELECT id FROM bank_imports ORDER BY id DESC LIMIT 10');

@@ -14,6 +14,7 @@ export const DEFAULTS = {
   visitorPhotoRetentionDays: 90,
   bankDetails: null, // { accountName, accountNumber, ifsc, upiId } shown to residents for direct transfers
   tally: null,       // ledger names in the society's Tally company; see lib/tally.js
+  demoBankStatement: null, // demo only: the sample statement made with the sample data
 };
 
 let cache = null;
