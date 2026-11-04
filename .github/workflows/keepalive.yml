@@ -1,0 +1,32 @@
+# Keeps the free Render deployment awake for reviewers. Render's free plan puts a
+# web service to sleep after 15 minutes without requests, and the first visit
+# after that takes about a minute. A request every 10 minutes avoids it.
+# One service running all month (~744 h) fits in the free plan's 750 hours.
+#
+# The address can be changed without editing this file: Settings → Secrets and
+# variables → Actions → Variables → KEEPALIVE_URL. To stop, disable the workflow
+# in the Actions tab.
+name: Keep the live app awake
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping /api/health
+        env:
+          URL: ${{ vars.KEEPALIVE_URL || 'https://township-91vm.onrender.com/api/health' }}
+        run: |
+          # A sleeping service can take up to a minute to answer, so allow 90 s and retry.
+          curl --fail --silent --show-error --max-time 90 --retry 3 --retry-delay 10 --retry-all-errors "$URL"
+          echo
