@@ -330,7 +330,8 @@
 .lp-role { box-shadow: none; }
 .lp-install > button { opacity: 1; color: var(--lp-inv); box-shadow: inset 0 0 0 1px rgba(236, 210, 243, 0.5); }
 .lp-install > button:hover { background: rgba(236, 210, 243, 0.12); }
-.lp-nav.on-light .lp-install > button { color: var(--lp-ink); box-shadow: inset 0 0 0 1px var(--lp-line); }
+.lp-nav.on-light .lp-install > button { color: var(--lp-ink); box-shadow: inset 0 0 0 1px rgba(24, 24, 27, 0.32); }
+.lp-nav.on-light .lp-install > button:hover { background: rgba(24, 24, 27, 0.05); }
 .lp-nav-in > .lp-btn { white-space: nowrap; }
 @media (max-width: 767px) { .lp-nav-in > .lp-install { margin-left: auto; } .lp-nav-in > .lp-install + .lp-btn { margin-left: 0; } }
 
