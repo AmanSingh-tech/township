@@ -8,6 +8,7 @@ import { verifyWebhookSignature, settleOrder } from './lib/razorpay.js';
 import { HttpError } from './lib/util.js';
 import { checkFileUrl, readFile } from './lib/storage.js';
 import { ROLES, allow, h } from './http.js';
+import { ACCOUNTS, DEMO_LOGINS, GUARD_PIN } from './demo/accounts.js';
 import * as Sentry from '@sentry/node';
 import authRoutes from './routes/auth.js';
 import residentRoutes from './routes/resident.js';
@@ -54,7 +55,11 @@ export function createApp() {
   app.use(express.text({ type: 'text/csv', limit: '10mb' }));
   app.use('/api', (req, res, next) => { req.meta = { ip: req.ip, userAgent: req.get('user-agent') }; next(); });
   app.get('/api/health', (req, res) => res.json({ ok: true }));
-  app.get('/api/client-config', (req, res) => res.json({ sentryDsn: env.SENTRY_DSN || null, environment: env.NODE_ENV }));
+  app.get('/api/client-config', (req, res) => res.json({
+    sentryDsn: env.SENTRY_DSN || null, environment: env.NODE_ENV,
+    // Demo only: the sample township's logins, listed on the sign-in page.
+    demoLogins: env.DEMO_DATA ? DEMO_LOGINS : null, guardLogin: env.DEMO_DATA ? { phone: ACCOUNTS.guard, pin: GUARD_PIN } : null,
+  }));
   app.use('/api', authRoutes);
   app.get('/api/files/*', h(async (req, res) => {
     const key = req.params[0];

@@ -20,8 +20,13 @@ export const SESSION_HOURS = { resident: 24 * 30, guard: 12, helpdesk: 12, accou
 // Codes are only exposed to the test suite, never over HTTP.
 export const testOtps = new Map();
 
+// A reviewer trying every role from one laptop would hit the real limits, so
+// the demo allows five times as many. Production keeps them as above.
+const LIMIT_SCALE = env.DEMO_DATA ? 5 : 1;
+
 async function limited(kind, key) {
-  const { max, minutes } = LIMITS[kind];
+  const { minutes } = LIMITS[kind];
+  const max = LIMITS[kind].max * LIMIT_SCALE;
   const n = await val(`SELECT COUNT(*) FROM auth_attempts WHERE kind = $1 AND key = $2 AND at > now() - make_interval(mins => $3)`, [kind, key, minutes]);
   return n >= max;
 }

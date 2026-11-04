@@ -10,11 +10,8 @@ import { setSetting, clearSettingsCache } from '../lib/settings.js';
 import { hashPin, createDevice, pairDevice } from '../lib/auth.js';
 import { today, addDays } from '../lib/util.js';
 
-export const ACCOUNTS = {
-  aamir: '9822010003', swati: '9822010002', neeraj: '9822010001',
-  helpdesk: '9000000001', accounts: '9000000004', committee: '9000000002', admin: '9000000005', guard: '9000000003',
-};
-export const GUARD_PIN = '2468';
+import { ACCOUNTS, GUARD_PIN } from './accounts.js';
+export { ACCOUNTS, GUARD_PIN };
 
 export async function loadFixtures() {
   await q('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');

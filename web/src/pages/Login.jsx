@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, setSession } from '../api.js';
 import { useT, LANGS } from '../i18n.jsx';
 import { homeFor } from '../App.jsx';
@@ -13,13 +13,21 @@ export default function Login() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [screenCode, setScreenCode] = useState('');
+  const [demo, setDemo] = useState(null);
   const digits = phone.replace(/\D/g, '').slice(-10);
 
-  async function sendOtp(e) {
-    e?.preventDefault();
+  // Demo servers (DEMO_DATA=true) list the sample township's logins.
+  useEffect(() => {
+    fetch('/api/client-config').then((r) => r.json())
+      .then((c) => c.demoLogins?.length && setDemo({ logins: c.demoLogins, guard: c.guardLogin }))
+      .catch(() => {});
+  }, []);
+
+  async function sendOtp(e, number = digits) {
+    e?.preventDefault?.();
     setError(''); setBusy(true);
     try {
-      const r = await api('/auth/otp', { method: 'POST', body: { phone: digits } });
+      const r = await api('/auth/otp', { method: 'POST', body: { phone: number } });
       setScreenCode(r.screenCode || ''); setStep('code'); setCode('');
     }
     catch (e) { setError(e.message); } finally { setBusy(false); }
@@ -39,7 +47,7 @@ export default function Login() {
     <div className="login">
       <div className="box stack-lg">
         <div className="row between">
-          <div className="brand"><img src="/icon.svg" alt="" /><span>Township</span></div>
+          <Link to="/welcome" className="brand" style={{ textDecoration: 'none' }}><img src="/icon.svg" alt="" /><span>Township</span></Link>
           <select className="input" style={{ width: 'auto', height: 36 }} value={lang} onChange={(e) => setLang(e.target.value)} aria-label="Language">
             {LANGS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
           </select>
@@ -52,6 +60,21 @@ export default function Login() {
             {error && <p className="error">{error}</p>}
             <button className="btn primary lg block" disabled={busy || digits.length !== 10}>{t('sendOtp')}</button>
             <p className="faint small">Use the number registered with the society office. Not registered? Contact the help desk.</p>
+            {demo && (
+              <div className="stack">
+                <div className="divider" />
+                <p className="small"><b>Demo accounts</b> <span className="faint">· sample township, all made up. Tap one to sign in.</span></p>
+                <div className="demo-users">
+                  {demo.logins.map((u) => (
+                    <button type="button" key={u.phone} disabled={busy} onClick={() => { setPhone(u.phone); sendOtp(null, u.phone); }}>
+                      <span><b>{u.name}</b><br /><span className="faint">{u.role}</span></span>
+                      <span className="faint" style={{ textAlign: 'right' }}>{u.note}<br /><span className="mono">{u.phone}</span></span>
+                    </button>
+                  ))}
+                </div>
+                {demo.guard && <p className="faint small">Gate tablet: sign in as Office Admin, add a tablet, open <span className="mono">/gate</span> and enter the pairing code. Guard: <span className="mono">{demo.guard.phone}</span>, PIN <span className="mono">{demo.guard.pin}</span>.</p>}
+              </div>
+            )}
           </form>
         ) : (
           <form className="stack" onSubmit={verify}>
