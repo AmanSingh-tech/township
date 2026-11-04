@@ -9,8 +9,22 @@ const STATUS = {
   queue: ['Needs review', 'warn'], pending_approval: ['Awaiting approval', 'info'], duplicate: ['Duplicate', ''], ignored: ['Not maintenance', ''],
 };
 
-function Score({ v }) {
-  return <span className="score"><i><b style={{ width: `${Math.max(0, Math.min(100, v))}%` }} /></i>{Math.max(0, v)}</span>;
+// The tick marks the score at which a credit with strong evidence posts itself.
+function Score({ v, auto = 80 }) {
+  const w = Math.max(0, Math.min(100, v));
+  return <span className="score"><i><b className={v >= auto ? 'hi' : ''} style={{ width: `${w}%` }} /><u style={{ left: `${auto}%` }} /></i>{Math.max(0, v)}</span>;
+}
+
+// Evidence as chips: strong (flat number, UPI ID), supporting, or against.
+function Reasons({ list }) {
+  return (
+    <div className="reasons">
+      {list.map((r) => {
+        const kind = /written in the narration|UPI ID .* registered/i.test(r) ? 'strong' : /far above|needs a person|weak|Conflicting|points to/i.test(r) ? 'against' : 'support';
+        return <span key={r} className={`reason ${kind}`}>{r}</span>;
+      })}
+    </div>
+  );
 }
 
 function ReviewCard({ row, onDone }) {
@@ -42,7 +56,7 @@ function ReviewCard({ row, onDone }) {
         </div>
         <div className="num" style={{ fontSize: 20, fontWeight: 600 }}>{inr(row.amount)}</div>
       </div>
-      <div className="notice warn small">{row.reasons.join(' · ')}</div>
+      <Reasons list={row.reasons} />
       {row.candidates.length > 0 && (
         <div className="stack" style={{ gap: 8 }}>
           <span className="label">Suggestions</span>
@@ -50,7 +64,7 @@ function ReviewCard({ row, onDone }) {
             <div key={c.flatId} className="row between" style={{ gap: 10, alignItems: 'flex-start' }}>
               <div className="grow">
                 <div className="row" style={{ gap: 10 }}><b style={{ fontWeight: 600 }}>{c.flatId}</b><Score v={c.score} /></div>
-                <div className="faint tiny">{c.reasons.join(' · ')}</div>
+                <Reasons list={c.reasons} />
               </div>
               <button className="btn sm" onClick={() => resolve({ flatId: c.flatId, rememberVpa: remember })}>Post here</button>
             </div>
@@ -90,6 +104,7 @@ export default function Matching() {
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [shown, setShown] = useState(null);
+  const [only, setOnly] = useState(null);
   const latest = shown || imports?.[0];
 
   async function upload(text, filename) {
@@ -122,7 +137,7 @@ export default function Matching() {
       <div className={`drop ${over ? 'over' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); readFile(e.dataTransfer.files[0]); }}>
-        <Icon name="upload" size={26} className="faint" />
+        <span className="drop-ic tint-lilac"><Icon name="upload" size={24} /></span>
         <p style={{ marginTop: 8, fontWeight: 500 }}>Drop a bank statement CSV here</p>
         <p className="faint small">HDFC, SBI and ICICI CSV exports work as they are. Re-uploading a statement never posts anything twice.</p>
         <div className="row" style={{ justifyContent: 'center', marginTop: 14 }}>
@@ -153,17 +168,32 @@ export default function Matching() {
               </select>
             )}
           </div>
-          <div className="kpis" style={{ marginBottom: 12 }}>
-            <div className="kpi"><div className="k-label">Posted automatically</div><div className="k-value">{latest.counts.posted}</div><div className="k-sub">{inr(sum(latest.rows, ['posted']))}</div></div>
-            <div className="kpi"><div className="k-label">Needed a person</div><div className="k-value">{latest.counts.queue + latest.counts.pending_approval + latest.counts.resolved}</div><div className="k-sub">{inr(sum(latest.rows, ['queue', 'pending_approval', 'resolved']))}</div></div>
-            <div className="kpi"><div className="k-label">Online payments</div><div className="k-value">{latest.counts.reconciled}</div><div className="k-sub">Razorpay settlements, recorded when paid</div></div>
-            <div className="kpi"><div className="k-label">Skipped</div><div className="k-value">{latest.counts.duplicate + latest.counts.ignored}</div><div className="k-sub">{latest.counts.duplicate} duplicate · {latest.counts.ignored} debit or other</div></div>
-          </div>
+          {(() => {
+            const groups = [
+              ['auto', 'Posted automatically', ['posted'], `${inr(sum(latest.rows, ['posted']))}`],
+              ['person', 'Needed a person', ['queue', 'pending_approval', 'resolved'], `${inr(sum(latest.rows, ['queue', 'pending_approval', 'resolved']))}`],
+              ['online', 'Online payments', ['reconciled'], 'Razorpay settlements, recorded when paid'],
+              ['skip', 'Skipped', ['duplicate', 'ignored'], `${latest.counts.duplicate} duplicate · ${latest.counts.ignored} debit or other`],
+            ].map(([k, l, st, sub2]) => ({ k, l, st, sub: sub2, n: latest.rows.filter((r) => st.includes(r.status)).length }));
+            const total = latest.rows.length || 1;
+            return (
+              <>
+                <div className="mresult" aria-hidden="true">{groups.map((g) => g.n > 0 && <i key={g.k} className={`g-${g.k}`} style={{ flex: g.n }} />)}</div>
+                <div className="kpis mtiles" style={{ marginBottom: 12 }}>
+                  {groups.map((g) => (
+                    <button key={g.k} type="button" className={`kpi g-${g.k} ${only === g.k ? 'on' : ''}`} aria-pressed={only === g.k} onClick={() => setOnly(only === g.k ? null : g.k)}>
+                      <div className="k-label"><span className="dot" />{g.l}</div><div className="k-value">{g.n}<span className="k-pct">{Math.round((g.n / total) * 100)}%</span></div><div className="k-sub">{g.sub}</div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
           <div className="card flush table-wrap">
             <table className="table">
               <thead><tr><th>Date</th><th>Narration</th><th className="num">Amount</th><th>Result</th><th>Flat</th><th className="hide-sm">Why</th></tr></thead>
               <tbody>
-                {latest.rows.map((r) => (
+                {latest.rows.filter((r) => !only || ({ auto: ['posted'], person: ['queue', 'pending_approval', 'resolved'], online: ['reconciled'], skip: ['duplicate', 'ignored'] })[only].includes(r.status)).map((r) => (
                   <tr key={r.id}>
                     <td className="small faint" style={{ whiteSpace: 'nowrap' }}>{date(r.txn_date)}</td>
                     <td className="mono" style={{ maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.narration}>{r.narration}</td>

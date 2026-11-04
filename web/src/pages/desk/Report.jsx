@@ -5,8 +5,32 @@ import { useApi, Skeleton, Icon, useToast } from '../../ui.jsx';
 import BillRuns from './BillRuns.jsx';
 import { RateBars, HBars, Legend, SERIES, AGEING } from './Charts.jsx';
 
-function Kpi({ label, value, sub, tone }) {
-  return <div className="kpi"><div className="k-label">{label}</div><div className="k-value">{value}</div>{sub && <div className={`k-sub ${tone || ''}`}>{sub}</div>}</div>;
+// meter: { value, target, lower } draws progress with the target marked.
+function Kpi({ label, value, sub, tone, meter, meterTone = tone, icon, tint }) {
+  return (
+    <div className="kpi">
+      <div className="k-label">{icon && <span className={`k-ic tint-${tint}`}><Icon name={icon} size={15} /></span>}{label}</div>
+      <div className="k-value">{value}</div>
+      {meter && <span className={`k-meter ${meterTone || ''}`} aria-hidden="true"><i style={{ width: `${Math.min(100, (meter.value || 0) * 100)}%` }} /><b style={{ left: `${meter.target * 100}%` }} /></span>}
+      {sub && <div className={`k-sub ${tone || ''}`}>{sub}</div>}
+    </div>
+  );
+}
+
+// The brief's three measures of success, from where the society started.
+function Goal({ label, from, now, target, lower, unit = '%', note }) {
+  const met = now != null && (lower ? now <= target : now >= target);
+  const fmt = (v) => (v == null ? '—' : `${Math.round(v * 100)}${unit}`);
+  const span = lower ? from - target : target - from;
+  const progress = now == null ? 0 : Math.max(0, Math.min(1, (lower ? from - now : now - from) / (span || 1)));
+  return (
+    <div className={`goal ${met ? 'met' : ''}`}>
+      <div className="row between"><b>{label}</b><span className={`pill ${met ? 'ok' : 'warn'}`}>{met ? 'On target' : 'Not yet'}</span></div>
+      <div className="goal-nums"><span className="faint">{fmt(from)}</span><span className="goal-now num">{fmt(now)}</span><span className="faint">target {lower ? '<' : ''}{fmt(target)}</span></div>
+      <span className="goal-bar" aria-label={`${Math.round(progress * 100)}% of the way`}><i style={{ width: `${progress * 100}%` }} /></span>
+      {note && <p className="faint tiny">{note}</p>}
+    </div>
+  );
 }
 
 export default function Report() {
@@ -73,11 +97,20 @@ export default function Report() {
       )}
 
       <div className="kpis">
-        <Kpi label={`Collected for ${cur.label.split(' ')[0]}`} value={pct(cur.collectionRate)} sub={`${inr(cur.collected)} of ${inr(cur.billed)}`} />
-        <Kpi label="Paid by due date" value={pct(cur.onTimeRate)} sub={`${cur.onTime} of ${cur.flats} flats · target 90%`} tone={cur.onTimeRate >= 0.9 ? 'good' : 'bad'} />
-        <Kpi label="Outstanding now" value={inr(r.outstanding)} sub={`includes ${inr(r.interestAccrued)} interest not yet posted`} />
-        <Kpi label="Received, not yet identified" value={inr(r.matching.queueAmount)} sub={r.matching.queueCount ? `${r.matching.queueCount} bank credits in the accounts queue` : 'Nothing waiting in the accounts queue'} tone={r.matching.queueCount ? 'bad' : undefined} />
+        <Kpi icon="bill" tint="lilac" label={`Collected for ${cur.label.split(' ')[0]}`} value={pct(cur.collectionRate)} sub={`${inr(cur.collected)} of ${inr(cur.billed)}`} meter={{ value: cur.collectionRate, target: 1 }} />
+        <Kpi icon="clock" tint="butter" label="Paid by due date" value={pct(cur.onTimeRate)} sub={`${cur.onTime} of ${cur.flats} flats · target 90%`} tone={cur.onTimeRate >= 0.9 ? 'good' : 'bad'} meter={{ value: cur.onTimeRate, target: 0.9 }} />
+        <Kpi icon="chart" tint="peach" label="Outstanding now" value={inr(r.outstanding)} sub={`includes ${inr(r.interestAccrued)} interest not yet posted`} />
+        <Kpi icon="bank" tint="sky" label="Received, not yet identified" value={inr(r.matching.queueAmount)} sub={r.matching.queueCount ? `${r.matching.queueCount} bank credits in the accounts queue` : 'Nothing waiting in the accounts queue'} tone={r.matching.queueCount ? 'bad' : undefined} />
       </div>
+
+      <section className="card stack">
+        <div className="row between wrap"><h2>Against the brief's targets</h2><span className="faint tiny">Where the society started, where it is now, and the six-month goal</span></div>
+        <div className="goals">
+          <Goal label="On-time payments" from={0.7} now={cur.onTimeRate} target={0.9} note="Bills fully paid by their due date." />
+          <Goal label="Credits matched automatically" from={0} now={r.matching.totalCredits ? r.matching.autoRate : null} target={0.5} note="The brief asks for 80% less matching time; on test statements the app saves 88% (docs/evaluation.md)." />
+          <Goal label="Reopened complaints" from={0.25} now={c.reopenRate} target={0.08} lower note="Complaints reopened by residents after a fix." />
+        </div>
+      </section>
 
       <div className="grid-2">
         <section className="card stack">
@@ -105,10 +138,10 @@ export default function Report() {
       <section className="stack">
         <div className="section-title"><h2>Complaints, last {c.windowDays} days</h2></div>
         <div className="kpis">
-          <Kpi label="Median first response" value={duration(c.medianFirstResponseMins)} sub={`${pct(c.slaRate)} within target`} />
-          <Kpi label="Median time to resolve" value={c.medianResolutionHours == null ? '—' : duration(c.medianResolutionHours * 60)} sub={`${c.raised} raised · ${c.open} open now`} />
-          <Kpi label="Reopened" value={pct(c.reopenRate)} sub="target under 8%" tone={c.reopenRate != null && c.reopenRate < 0.08 ? 'good' : 'bad'} />
-          <Kpi label="Resident rating" value={c.avgRating ? `${c.avgRating.toFixed(1)} / 5` : '—'} sub={`${c.escalated} safety escalations · ${c.breaching} replies late now`} tone={c.breaching ? 'bad' : ''} />
+          <Kpi icon="clock" tint="sky" label="Median first response" value={duration(c.medianFirstResponseMins)} sub={`${pct(c.slaRate)} within target`} meter={{ value: c.slaRate, target: 0.9 }} tone={c.slaRate >= 0.9 ? 'good' : ''} />
+          <Kpi icon="wrench" tint="sage" label="Median time to resolve" value={c.medianResolutionHours == null ? '—' : duration(c.medianResolutionHours * 60)} sub={`${c.raised} raised · ${c.open} open now`} />
+          <Kpi icon="back" tint="rose" label="Reopened" value={pct(c.reopenRate)} sub="target under 8%" tone={c.reopenRate != null && c.reopenRate < 0.08 ? 'good' : 'bad'} />
+          <Kpi icon="star" tint="butter" label="Resident rating" value={c.avgRating ? `${c.avgRating.toFixed(1)} / 5` : '—'} sub={`${c.escalated} safety escalations · ${c.breaching} replies late now`} tone={c.breaching ? 'bad' : ''} meter={c.avgRating ? { value: c.avgRating / 5, target: 0.8 } : null} meterTone={c.avgRating >= 4 ? 'good' : ''} />
         </div>
       </section>
 

@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api.js';
 import { ago, duration, time } from '../../format.js';
 import { useApi, usePoll, Skeleton, Empty, Icon, STATUS_TONE, URGENCY_TONE, useToast } from '../../ui.jsx';
+import { CategoryBadge } from '../resident/parts.jsx';
 
 const STATUS_LABEL = { open: 'Raised', assigned: 'Assigned', in_progress: 'In progress', resolved: 'Resolved', closed: 'Closed' };
 const FILTERS = [
@@ -17,9 +18,16 @@ function Timer({ c }) {
   if (['resolved', 'closed'].includes(c.status)) return <span className="faint small">—</span>;
   if (c.first_response_at) return <span className="faint small">Responded</span>;
   const left = (Date.parse(c.due_by) - Date.now()) / 60000;
-  return <span className={`small num ${left < 0 ? 'error' : left < 30 ? '' : 'muted'}`} style={{ fontWeight: left < 30 ? 600 : 400 }}>
-    <Icon name="clock" size={14} style={{ verticalAlign: -2, marginRight: 4 }} />{left < 0 ? `${duration(left)} late` : `${duration(left)} left`}
-  </span>;
+  const span = (Date.parse(c.due_by) - Date.parse(c.created_at)) / 60000 || 1;
+  const used = Math.min(1, Math.max(0, 1 - left / span));
+  return (
+    <span className="timer">
+      <span className={`small num ${left < 0 ? 'error' : left < 30 ? '' : 'muted'}`} style={{ fontWeight: left < 30 ? 600 : 400 }}>
+        <Icon name="clock" size={14} style={{ verticalAlign: -2, marginRight: 4 }} />{left < 0 ? `${duration(left)} late` : `${duration(left)} left`}
+      </span>
+      <span className={`timer-bar ${left < 0 ? 'late' : used > 0.75 ? 'soon' : ''}`} aria-hidden="true"><i style={{ width: `${used * 100}%` }} /></span>
+    </span>
+  );
 }
 
 export default function Queue() {
@@ -59,9 +67,13 @@ export default function Queue() {
     <>
       <div className="main-head">
         <div><h1>Complaints</h1><p className="muted">Sorted by safety, urgency and response deadline.</p></div>
-        <div className="tabs">
-          {FILTERS.map(([k, l, f]) => <button key={k} className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{l}<span className="n">{list ? list.filter(f).length : ''}</span></button>)}
-        </div>
+      </div>
+      <div className="qtiles" role="tablist" aria-label="Filter">
+        {FILTERS.map(([k, l, f], i) => (
+          <button key={k} role="tab" aria-selected={filter === k} className={`qtile t${i} ${filter === k ? 'on' : ''}`} onClick={() => setFilter(k)}>
+            <span className="qtile-n num">{list ? list.filter(f).length : '–'}</span><span className="qtile-l">{l}</span>
+          </button>
+        ))}
       </div>
       <div className="split">
         <div className="card flush">
@@ -79,7 +91,7 @@ export default function Queue() {
                         </div>
                         <div className="faint tiny">{c.flat_id} · #{c.id} · {ago(c.created_at)}{c.linked_count ? ` · ${c.linked_count + 1} flats` : ''}{c.duplicate_of ? ` · linked to #${c.duplicate_of}` : ''}</div>
                       </td>
-                      <td><div className="small">{c.category}</div><span className={`pill ${URGENCY_TONE[c.urgency]}`} style={{ height: 20, fontSize: 11.5 }}>{c.urgency}</span></td>
+                      <td><div className="row" style={{ gap: 10 }}><CategoryBadge category={c.category} size={30} /><div><div className="small">{c.category}</div><span className={`pill ${URGENCY_TONE[c.urgency]}`} style={{ height: 20, fontSize: 11.5 }}>{c.urgency}</span></div></div></td>
                       <td><span className={`pill ${STATUS_TONE[c.status]}`}>{STATUS_LABEL[c.status]}</span><div className="faint tiny ellipsis" style={{ maxWidth: 150, marginTop: 2 }}>{c.assignee || 'Unassigned'}</div></td>
                       <td style={{ whiteSpace: 'nowrap' }}><Timer c={c} /></td>
                     </tr>
@@ -95,7 +107,7 @@ export default function Queue() {
             <div className="card stack" style={{ gap: 18 }}>
               <div className="stack" style={{ gap: 6 }}>
                 <div className="row between">
-                  <span className="faint small">#{detail.id} · {detail.flat_id} · {detail.raised_by?.name}</span>
+                  <span className="row faint small" style={{ gap: 10 }}><CategoryBadge category={detail.category} size={30} />#{detail.id} · {detail.flat_id} · {detail.raised_by?.name}</span>
                   <span className={`pill ${STATUS_TONE[detail.status]}`}>{STATUS_LABEL[detail.status]}</span>
                 </div>
                 <p style={{ fontSize: 15.5 }}>{detail.text}</p>
@@ -120,8 +132,12 @@ export default function Queue() {
               <div className="stack" style={{ gap: 8 }}>
                 <div className="row between">
                   <span className="label">Category</span>
-                  <span className="faint tiny">AI: {detail.ai_category}, {Math.round((detail.ai_confidence || 0) * 100)}% sure{detail.category_changed_by ? ` · changed by ${detail.category_changed_by}` : ''}
+                  <span className="faint tiny">AI: {detail.ai_category}{detail.category_changed_by ? ` · changed by ${detail.category_changed_by}` : ''}
                     {detail.escalated && detail.ai_category !== detail.category ? ' · set by the safety rule' : ''}</span>
+                </div>
+                <div className="conf" title="How sure the classifier was. Below the line, the desk is asked to check.">
+                  <span className="conf-bar"><i className={(detail.ai_confidence ?? 1) < (meta?.unsureBelow ?? 0.6) ? 'low' : ''} style={{ width: `${Math.round((detail.ai_confidence || 0) * 100)}%` }} /><b style={{ left: `${(meta?.unsureBelow ?? 0.6) * 100}%` }} /></span>
+                  <span className="tiny num">{Math.round((detail.ai_confidence || 0) * 100)}% sure</span>
                 </div>
                 {!detail.category_changed_by && !detail.escalated && (detail.ai_confidence ?? 1) < (meta?.unsureBelow ?? 0.6) && (
                   <p className="notice warn small">The AI is unsure about this category. Check it and tap the right one if needed.</p>
