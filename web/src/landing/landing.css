@@ -420,3 +420,7 @@
   .lp-story-glow { filter: none; }
   .lp-hero-glow { will-change: auto; }
 }
+
+/* The download steps popover keeps light colours on the front page, in both themes. */
+.lp .install-pop { background: #fafaf8; color: #18181b; border-color: rgba(24, 24, 27, 0.1); }
+.lp .install-pop .tiny, .lp .install-pop li { color: #4b4b55; }
