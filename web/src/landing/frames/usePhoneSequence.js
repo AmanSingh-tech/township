@@ -13,7 +13,8 @@ function start() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   job = renderPhoneSequence({
     count: small ? 48 : 60,
-    scale: Math.max(1, dpr * (small ? 0.6 : 0.75)),
+    // Sharp on every screen: a little above the screen's own pixel density, capped at 2.
+    scale: Math.min(2, Math.max(1.25, dpr * (small ? 1 : 1.25))),
     onProgress: (urls) => { latest = urls; listeners.forEach((fn) => fn(urls)); },
   });
 }

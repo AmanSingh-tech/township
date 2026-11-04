@@ -126,18 +126,20 @@ function projector(theta, cx) {
   };
 }
 
-// Draws a flat texture lying at depth z (front-facing or mirrored), in thin
-// vertical strips so it narrows and grows with perspective.
-function drawPlane(c, tex, z, facing, proj, cy, s, N) {
-  for (let i = 0; i < N; i++) {
-    const u0 = i / N, u1 = (i + 1) / N;
-    const x0 = facing ? (u0 - 0.5) * W : (0.5 - u0) * W;
-    const x1 = facing ? (u1 - 0.5) * W : (0.5 - u1) * W;
-    const [sx0, p0] = proj(x0, z), [sx1, p1] = proj(x1, z);
-    const p = (p0 + p1) / 2, h = H * p;
-    c.drawImage(tex, u0 * W * s, 0, (u1 - u0) * W * s, H * s,
-      Math.min(sx0, sx1) * s, (cy - h / 2) * s, Math.abs(sx1 - sx0) * s + 0.8, h * s);
-  }
+// Draws a flat texture lying at depth z, turned by theta, in one smooth pass:
+// narrowed by the angle, moved sideways by its depth, and scaled slightly
+// for distance. The perspective here is so slight that one transform looks
+// the same as strip-by-strip drawing, without its seams on the rounded corners.
+// minWidth keeps a body layer visible when it is seen edge-on.
+function drawPlane(c, tex, z, theta, cx, cy, s, minWidth = 0) {
+  const cos = Math.cos(theta), sin = Math.sin(theta);
+  const p = FOCAL / (FOCAL + z * cos);
+  const sx = Math.max(Math.abs(cos), minWidth / W) * p;
+  c.save();
+  c.imageSmoothingQuality = 'high';
+  c.setTransform(sx, 0, 0, p, (cx + z * sin * p) * s, cy * s);
+  c.drawImage(tex, (-W * s) / 2, (-H * s) / 2);
+  c.restore();
 }
 
 // The phone's outline in one tone of metal, for the body layers.
@@ -167,13 +169,13 @@ function drawFrame(out, face, theta, front, back, s, sils) {
   // Body: the phone's rounded outline stacked through its thickness, back to
   // front, so the sides and corners are solid at every angle. The middle
   // layers (the outermost part of the rounded rim) catch the most light.
-  const L = 12;
+  const L = 24;
   const layers = Array.from({ length: L + 1 }, (_, k) => -DEPTH / 2 + (DEPTH * k) / L);
   layers.sort((a, b) => b * cos - a * cos); // farthest first
   for (const z of layers) {
     const d = Math.abs(z) / (DEPTH / 2);
     const tone = sils[d < 0.4 ? 2 : d < 0.75 ? 1 : 0];
-    drawPlane(ctx, tone, z, true, proj, cy, s, 60);
+    drawPlane(ctx, tone, z, theta, cx, cy, s, 1.5);
   }
 
   // Face, front or back, drawn in thin vertical strips so it narrows and
@@ -186,7 +188,7 @@ function drawFrame(out, face, theta, front, back, s, sils) {
   const fctx = face.getContext('2d');
   fctx.globalCompositeOperation = 'source-over';
   fctx.clearRect(0, 0, face.width, face.height);
-  drawPlane(fctx, tex, z, isFront, proj, cy, s, 140);
+  drawPlane(fctx, tex, z, theta, cx, cy, s);
   // Turning away from the light darkens the face; a highlight sweeps across.
   fctx.globalCompositeOperation = 'source-atop';
   fctx.fillStyle = `rgba(0,0,0,${(1 - Math.abs(cos)) * 0.62})`;
@@ -199,7 +201,7 @@ function drawFrame(out, face, theta, front, back, s, sils) {
 }
 
 const toBlobUrl = (c) => new Promise((resolve) => {
-  c.toBlob((b) => resolve(b ? URL.createObjectURL(b) : c.toDataURL()), 'image/webp', 0.86);
+  c.toBlob((b) => resolve(b ? URL.createObjectURL(b) : c.toDataURL()), 'image/webp', 0.92);
 });
 
 // Resolves to the frame URLs. onProgress gets the list as it grows, so the
