@@ -27,6 +27,9 @@ const PATHS = {
   shield: 'M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z',
   search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4',
   phone: 'M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z',
+  sun: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z',
+  monitor: 'M3 5h18v11H3zM8 20h8M12 16v4',
 };
 export function Icon({ name, size = 20, stroke = 1.7, ...rest }) {
   return (
@@ -98,7 +101,7 @@ export const useToast = () => useContext(ToastCtx);
 export const Skeleton = ({ h = 80, style }) => <div className="skeleton" style={{ height: h, ...style }} />;
 export const Empty = ({ children }) => <div className="empty">{children}</div>;
 
-export const STATUS_TONE = { open: '', assigned: 'info', in_progress: 'warn', resolved: 'ok', closed: '' };
+export const STATUS_TONE = { open: '', assigned: '', in_progress: 'warn', resolved: 'ok', closed: '' };
 export const URGENCY_TONE = { critical: 'danger', high: 'warn', medium: '', low: '' };
 export const STEP = { open: 1, assigned: 2, in_progress: 3, resolved: 4, closed: 4 };
 

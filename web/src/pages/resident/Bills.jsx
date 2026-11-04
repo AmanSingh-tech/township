@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useT } from '../../i18n.jsx';
-import { inr, date } from '../../format.js';
+import { inr, date, rate as fmtRate } from '../../format.js';
 import { useApi, Skeleton, Icon } from '../../ui.jsx';
 import PaySheet from './PaySheet.jsx';
 
@@ -19,7 +19,7 @@ export default function Bills() {
       <section className="card stack" style={{ gap: 14 }}>
         <div className="row between">
           <div>
-            <div className="faint small">{flat.id} · {flat.area} sq ft × ₹{rate}</div>
+            <div className="faint small">{flat.id} · {flat.area} sq ft × {fmtRate(rate)}</div>
             <div className="num" style={{ fontSize: 30, fontWeight: 600, letterSpacing: '-0.02em' }}>{inr(st.totalDue)}</div>
           </div>
           {st.totalDue > 0 && <button className="btn primary" onClick={() => setPaying(true)}>{t('payNow')}</button>}
@@ -43,7 +43,7 @@ export default function Bills() {
             <div key={b.id} className="list-item">
               <div className="grow">
                 <div style={{ fontWeight: 500 }}>{b.label}</div>
-                <div className="faint tiny">Due {date(b.due_on)} · {b.area} sq ft × ₹{b.rate}</div>
+                <div className="faint tiny">Due {date(b.due_on)} · {b.area} sq ft × {fmtRate(b.rate)}</div>
               </div>
               <div className="right">
                 <div className="num">{inr(b.amount)}</div>

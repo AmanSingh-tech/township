@@ -80,14 +80,17 @@ export default function Book() {
         ))}
       </div>
 
-      {!avail ? <Skeleton h={160} /> : avail.closed ? <div className="notice warn">{t('closed')}: {avail.closed}</div> : (
+      {!avail ? <Skeleton h={160} /> : avail.closed ? <div className="notice warn">{t('closed')}: {avail.closed}</div>
+        : avail.slots.every((s) => s.past) ? <p className="empty">{t('noSlotsLeft')}</p> : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: 8 }}>
+          {/* Slots that have already started today are left out. */}
           {avail.slots.map((s, i) => {
-            const off = s.past || s.left === 0;
+            if (s.past) return null;
+            const full = s.left === 0;
             return (
-              <button key={s.start} disabled={off} onClick={() => toggle(i)} className={`chip ${pick.includes(i) ? 'on' : ''}`}
-                style={{ height: 52, borderRadius: 12, opacity: off ? 0.4 : 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.2 }}>
-                <span>{s.start}</span><span className="tiny" style={{ opacity: 0.7 }}>{s.past ? '—' : s.left === 0 ? t('full') : `${s.left} left`}</span>
+              <button key={s.start} disabled={full} onClick={() => toggle(i)} className={`chip ${pick.includes(i) ? 'on' : ''}`}
+                style={{ height: 52, borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.2 }}>
+                <span>{s.start}</span><span className="tiny" style={{ opacity: 0.7 }}>{full ? t('full') : t('slotsLeft', { n: s.left })}</span>
               </button>
             );
           })}

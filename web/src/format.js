@@ -1,4 +1,6 @@
 export const inr = (n) => (n < 0 ? '−₹' : '₹') + Math.abs(Math.round(n || 0)).toLocaleString('en-IN');
+// Rates per sq ft always show paise: ₹6.50, not ₹6.5.
+export const rate = (n) => `₹${Number(n || 0).toFixed(2)}`;
 export const pct = (x, digits = 0) => (x == null ? '—' : `${(x * 100).toFixed(digits)}%`);
 
 export function date(d, opts = { day: 'numeric', month: 'short' }) {

@@ -54,7 +54,7 @@ export default function Home() {
       {push === 'off' && (
         <div className="card row between" style={{ gap: 12 }}>
           <div className="small"><b style={{ fontWeight: 500 }}>{t('alertsTitle')}</b><div className="faint tiny">{t('alertsBody')}</div></div>
-          <button className="btn sm primary" onClick={() => turnOnPush().then(() => setPush('on')).catch((e) => toast(e.message))}>{t('turnOn')}</button>
+          <button className="btn sm" onClick={() => turnOnPush().then(() => setPush('on')).catch((e) => toast(e.message))}>{t('turnOn')}</button>
         </div>
       )}
 

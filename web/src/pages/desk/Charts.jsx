@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
-// Validated with the dataviz palette checker (light surface #ffffff):
-// two categorical series, and a single-hue ramp for dues ageing.
-export const SERIES = { collected: '#13795a', onTime: '#b36f12' };
-export const AGEING = { current: '#b9bcc0', '1-30': '#7aae97', '31-60': '#4c8d73', '61-90': '#2a6a52', '90+': '#16422f' };
+// Colours come from the theme (styles.css --chart-*, --seq-*), each set
+// checked with the dataviz palette validator against its own surface: two
+// categorical series, and a single-hue ramp for dues ageing (grey = not due).
+export const SERIES = { collected: 'var(--chart-1)', onTime: 'var(--chart-2)' };
+export const AGEING = { current: 'var(--seq-0)', '1-30': 'var(--seq-1)', '31-60': 'var(--seq-2)', '61-90': 'var(--seq-3)', '90+': 'var(--seq-4)' };
 
 function useTip() {
   const [tip, setTip] = useState(null);
@@ -17,7 +18,7 @@ function useTip() {
   const node = tip && (
     <div role="tooltip" style={{
       position: 'fixed', left: tip.x + 12, top: tip.y - 12, transform: 'translateY(-100%)', pointerEvents: 'none', zIndex: 50,
-      background: 'var(--ink)', color: '#fff', padding: '8px 10px', borderRadius: 8, fontSize: 12.5, lineHeight: 1.5, boxShadow: 'var(--shadow)', whiteSpace: 'nowrap',
+      background: 'var(--fg)', color: 'var(--bg)', padding: '8px 10px', borderRadius: 8, fontSize: 12.5, lineHeight: 1.5, boxShadow: 'var(--shadow)', whiteSpace: 'nowrap',
     }}>{tip.content}</div>
   );
   return [bind, node];

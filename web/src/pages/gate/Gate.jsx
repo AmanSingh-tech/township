@@ -183,7 +183,7 @@ function GateConsole({ device, onSignOut }) {
         </div>
       </div>
 
-      {msg && <div className="g-banner" style={{ background: 'rgba(61,220,151,.14)', color: 'var(--g-accent)', fontSize: 20 }}>{msg}</div>}
+      {msg && <div className="g-banner" style={{ background: 'color-mix(in oklab, var(--g-ok), transparent 86%)', color: 'var(--g-ok)', fontSize: 20 }}>{msg}</div>}
 
       {mode === 'new' && <NewVisitor gate={gate} flats={flats} onSave={save} onCancel={() => setMode('home')} />}
       {mode === 'code' && <GuestCode gate={gate} onSave={save} onCancel={() => setMode('home')} />}
@@ -197,7 +197,7 @@ function GateConsole({ device, onSignOut }) {
             {rows.length === 0 && <div className="g-muted">{t('g_none')}</div>}
             {rows.map((v) => (
               <div key={v.id} className="g-visitor">
-                {v.photo ? <img src={v.photo} alt="" /> : <div className="g-ph" />}
+                {v.photo ? <img src={v.photo} alt="" /> : <div className="g-ph" aria-hidden="true">{(v.name || '?').trim().charAt(0).toUpperCase()}</div>}
                 <div className="grow">
                   <div style={{ fontSize: 22, fontWeight: 700 }}>{v.name}</div>
                   <div className="g-muted">{v.flat_id} · {v.purpose ? t(`g_purpose_${v.purpose}`) : ''} · {time(v.created_at)}</div>

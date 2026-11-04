@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, getSession, setSession } from '../../api.js';
 import { useT, LANGS } from '../../i18n.jsx';
 import { useApi, useToast, Icon, Sheet } from '../../ui.jsx';
+import { ThemeSwitch } from '../../theme.jsx';
 import { date } from '../../format.js';
 
 export default function Profile() {
@@ -63,6 +64,10 @@ export default function Profile() {
         <span className="label">{t('language')}</span>
         <div className="chips">{LANGS.map(([k, l]) => <button key={k} className={`chip ${lang === k ? 'on' : ''}`} onClick={() => changeLang(k)}>{l}</button>)}</div>
       </section>
+      <section className="stack" style={{ gap: 8 }}>
+        <span className="label">{t('theme')}</span>
+        <ThemeSwitch />
+      </section>
       <section>
         <div className="section-title">
           <h2>{t('household')}</h2>
@@ -92,7 +97,7 @@ export default function Profile() {
       {push && push !== 'unsupported' && push !== 'unavailable' && (
         <section className="card row between">
           <div><div style={{ fontWeight: 500 }}>{t('alerts')}</div><div className="faint tiny">{push === 'blocked' ? 'Blocked in browser settings' : t('alertsBody')}</div></div>
-          {push !== 'blocked' && <button className={`btn sm ${push === 'on' ? '' : 'primary'}`} onClick={togglePush}>{push === 'on' ? 'Turn off' : t('turnOn')}</button>}
+          {push !== 'blocked' && <button className="btn sm" onClick={togglePush}>{push === 'on' ? 'Turn off' : t('turnOn')}</button>}
         </section>
       )}
 

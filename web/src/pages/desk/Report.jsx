@@ -76,7 +76,7 @@ export default function Report() {
         <Kpi label={`Collected for ${cur.label.split(' ')[0]}`} value={pct(cur.collectionRate)} sub={`${inr(cur.collected)} of ${inr(cur.billed)}`} />
         <Kpi label="Paid by due date" value={pct(cur.onTimeRate)} sub={`${cur.onTime} of ${cur.flats} flats · target 90%`} tone={cur.onTimeRate >= 0.9 ? 'good' : 'bad'} />
         <Kpi label="Outstanding now" value={inr(r.outstanding)} sub={`includes ${inr(r.interestAccrued)} interest not yet posted`} />
-        <Kpi label="Received, not yet identified" value={inr(r.matching.queueAmount)} sub={`${r.matching.queueCount} bank credits in the accounts queue`} tone={r.matching.queueCount ? 'bad' : 'good'} />
+        <Kpi label="Received, not yet identified" value={inr(r.matching.queueAmount)} sub={r.matching.queueCount ? `${r.matching.queueCount} bank credits in the accounts queue` : 'Nothing waiting in the accounts queue'} tone={r.matching.queueCount ? 'bad' : undefined} />
       </div>
 
       <div className="grid-2">
@@ -137,7 +137,7 @@ export default function Report() {
           </div>
         </section>
       </div>
-      <p className="faint tiny">Collected = payments allocated to that month’s bills, oldest dues first. Paid by due date = bill fully settled on or before its due date. Interest is simple interest at 21% a year on overdue principal, per the society’s bye-laws. Automatic bank matching: {pct(r.matching.autoRate)} of {r.matching.totalCredits} credits.</p>
+      <p className="faint tiny">Collected = payments allocated to that month’s bills, oldest dues first. Paid by due date = bill fully settled on or before its due date. Interest is simple interest at 21% a year on overdue principal, per the society’s bye-laws.{r.matching.totalCredits > 0 && <> Automatic bank matching: {pct(r.matching.autoRate)} of {r.matching.totalCredits} credits.</>}</p>
     </div>
   );
 }

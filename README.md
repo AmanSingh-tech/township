@@ -47,7 +47,19 @@ npm run dev                   # API :4000 (migrates on start), app http://localh
 
 The database starts empty. For a fully populated local township, run `npm run dev:fixtures`. It only loads into a local database and prints the logins to use. Without SMS configured, the login code is shown on the sign-in screen.
 
-`npm test` runs the suite against `township_test`.
+`npm test` runs the suite against `township_test`. With the Compose database, create it once:
+`docker-compose exec db psql -U township -c "create database township_test"`.
+
+## Design
+
+Minimalist, after OpenDesign's "Neutral Modern" system (github.com/nexu-io/open-design, Apache-2.0):
+
+- **Tokens:** its token names and values (`web/src/styles.css`).
+- **Rules:** whitespace instead of boxes, flat cards with a 1px border, one accent (cobalt) per screen.
+- **Themes:** light and dark, chosen under Profile → Appearance (residents) or at the bottom of the desk sidebar (staff):
+  System follows the device, or pick Light or Dark.
+- **Gate tablet:** always dark, for night shifts and glare.
+- **Charts:** their colours are checked for colour-blind safety in both themes.
 
 ## Configuration
 

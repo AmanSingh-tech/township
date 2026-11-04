@@ -70,7 +70,7 @@ export default function PaySheet({ open, onClose, due, onPaid }) {
         name: config.societyName,
         description: 'Maintenance',
         prefill: order.prefill,
-        theme: { color: '#1f5f4a' },
+        theme: { color: '#2f6feb' },
         handler: async (resp) => {
           try {
             const r = await api('/pay/verify', { method: 'POST', body: resp });

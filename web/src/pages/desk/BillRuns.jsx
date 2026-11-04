@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api, getSession } from '../../api.js';
-import { inr, date, ago } from '../../format.js';
+import { inr, date, ago, rate as fmtRate } from '../../format.js';
 import { useApi, useToast } from '../../ui.jsx';
 
 const thisMonth = () => new Date(Date.now() + 330 * 60000).toISOString().slice(0, 7);
@@ -48,7 +48,7 @@ export default function BillRuns({ mode }) {
             <div key={r.id} className="row between wrap" style={{ padding: '12px 0', gap: 12 }}>
               <div className="grow">
                 <div style={{ fontWeight: 500 }}>{label(r.period)} · {r.flat_count} flats · {inr(r.total)}</div>
-                <div className="faint tiny">₹{Number(r.rate)} per sq ft · due {date(r.due_on)} · prepared by {r.prepared_by_name} {ago(r.prepared_at)}
+                <div className="faint tiny">{fmtRate(r.rate)} per sq ft · due {date(r.due_on)} · prepared by {r.prepared_by_name} {ago(r.prepared_at)}
                   {r.decided_by_name ? ` · ${r.status === 'issued' ? 'issued' : 'sent back'} by ${r.decided_by_name}` : ''}{r.note ? ` · “${r.note}”` : ''}</div>
               </div>
               {r.status === 'draft' && canApprove && r.prepared_by !== me.id ? (
