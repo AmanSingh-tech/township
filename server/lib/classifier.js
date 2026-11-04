@@ -11,9 +11,11 @@ export const URGENCIES = ['low', 'medium', 'high', 'critical'];
 // Each hazard also fixes the category, since a keyword model can misread it
 // ("smell of gas" looks like Housekeeping).
 const SAFETY = [
-  [/\bfire\b|\bsmoke\b|\bburning\b|आग|धुआं|धूर|\baag\b/i, 'fire or smoke', 'Safety'],
+  // "fire lane", "fire exit" and the like name a place, not a fire.
+  [/\bfire\b(?!\s*(lane|exit|extinguisher|drill|door|escape|alarm test))|\bsmoke\b|\bburning\b|आग|धुआं|धूर|\baag\b/i, 'fire or smoke', 'Safety'],
   [/\bgas\b.*\b(leak|smell)|\b(leak|smell)\w*\b.*\bgas\b|गैस|गॅस|\bgas leak/i, 'gas leak', 'Safety'],
-  [/\b(lift|elevator)\b.*\b(stuck|trapped|struck)\b|\b(stuck|trapped)\b.*\b(lift|elevator)\b|लिफ्ट.*(फंस|अटक|बंद)/i, 'person stuck in lift', 'Lift'],
+  [/\b(lift|elevator)\b.*\b(stuck|trapped|struck)\b|\b(stuck|trapped)\b.*\b(lift|elevator)\b|लिफ्ट.*(फंस|अटक|अडक)/i, 'person stuck in lift', 'Lift'],
+  // Not "बंद": "लिफ्ट बंद है" means the lift is off, which is urgent but nobody is trapped.
   [/\bshock\b|\bcurrent\s+(lag|aa|is coming)|\bspark(s|ing)?\b|\bshort[- ]?circuit\b|करंट|झटका|शॉक/i, 'electric shock or sparking', 'Electrical'],
 ];
 
@@ -39,7 +41,8 @@ const HIGH = /\bno water\b|\bflood|\boverflow|\bno power\b|\bnot working\b|\bbro
 const LOW = /\brequest\b|\bsuggest|\bwhen possible\b|\bminor\b|\bpaint\b|\bkindly\b.*\bschedule\b/i;
 
 export function classifyLocal(text) {
-  const words = text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  // \p{M} keeps Devanagari vowel signs inside their words (चूहे, not च + ह).
+  const words = text.toLowerCase().split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean);
   const scores = Object.fromEntries(CATEGORIES.map((c) => [c, 0]));
   for (const [cat, keys] of Object.entries(LEXICON)) {
     for (const k of keys) if (words.includes(k) || (k.length > 4 && text.toLowerCase().includes(k))) scores[cat] += 1;
@@ -101,7 +104,7 @@ export async function classify(text) {
 
 // Token overlap used for linking duplicates (ten flats reporting one lift).
 export function similarity(a, b) {
-  const set = (s) => new Set(s.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 2));
+  const set = (s) => new Set(s.toLowerCase().split(/[^\p{L}\p{M}\p{N}]+/u).filter((w) => w.length > 2));
   const A = set(a), B = set(b);
   const inter = [...A].filter((w) => B.has(w)).length;
   return inter / (new Set([...A, ...B]).size || 1);
