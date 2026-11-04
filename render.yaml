@@ -26,6 +26,14 @@ services:
         value: local
       - key: STORAGE_DIR
         value: /app/uploads
+      # Push alerts (optional). Secrets: set them in the Render dashboard, never here.
+      # Generate once with: npx web-push generate-vapid-keys
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false
 
 databases:
   - name: township-db
