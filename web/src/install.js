@@ -14,15 +14,18 @@ if (typeof window !== 'undefined') {
 export const isStandalone = () => typeof window !== 'undefined'
   && (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true);
 const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+// Safari on a Mac (Sonoma and later) installs web apps from File → Add to Dock; it has no prompt either.
+const isMacSafari = () => /Macintosh/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Edg|Firefox/.test(navigator.userAgent) && navigator.maxTouchPoints <= 1;
 
 const DISMISS = 'township.installDismissed';
 const dismissedRecently = () => { try { return Date.now() - Number(localStorage.getItem(DISMISS) || 0) < 14 * 864e5; } catch { return false; } };
 
-// mode: 'prompt' (a button works), 'ios' (show steps), or null (installed or unsupported).
+// mode: 'prompt' (a button works), 'ios' or 'mac' (show steps), or null (installed, or a
+// browser that cannot install web apps, such as Firefox on a desktop).
 export function useInstall() {
   const [, tick] = useState(0);
   useEffect(() => { const fn = () => tick((n) => n + 1); listeners.add(fn); return () => listeners.delete(fn); }, []);
-  const mode = isStandalone() ? null : deferred ? 'prompt' : isIos() ? 'ios' : null;
+  const mode = isStandalone() ? null : deferred ? 'prompt' : isIos() ? 'ios' : isMacSafari() ? 'mac' : null;
   return {
     mode,
     dismissed: dismissedRecently(),

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { api, getSession, setSession } from '../../api.js';
 import { Icon, initials } from '../../ui.jsx';
 import { LOGO } from '../../brand.js';
+import InstallButton from '../../InstallButton.jsx';
 
 export default function ResidentShell() {
   const { t } = useT();
@@ -22,7 +23,10 @@ export default function ResidentShell() {
             <div className="title">{t('hello')}, {user.name.split(' ')[0]}</div>
           </div>
         )}
-        <Link to="/me" className="avatar" aria-label={t('me')}>{initials(user.name)}</Link>
+        <div className="row" style={{ gap: 8 }}>
+          <InstallButton variant="icon" />
+          <Link to="/me" className="avatar" aria-label={t('me')}>{initials(user.name)}</Link>
+        </div>
       </header>
       <Outlet />
       <div className="tabbar no-print">

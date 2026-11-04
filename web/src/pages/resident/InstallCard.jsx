@@ -4,6 +4,7 @@ import { useT } from '../../i18n.jsx';
 import { Icon, useToast } from '../../ui.jsx';
 import { LOGO } from '../../brand.js';
 import { useInstall } from '../../install.js';
+import { InstallSteps } from '../../InstallButton.jsx';
 
 export default function InstallCard({ dismissible = true }) {
   const { t } = useT();
@@ -17,7 +18,7 @@ export default function InstallCard({ dismissible = true }) {
       <div className="grow">
         <b>{t('installTitle')}</b>
         <div className="tiny">{t('installBody')}</div>
-        {mode === 'ios' && steps && <ol className="install-steps tiny"><li>{t('iosStep1')}</li><li>{t('iosStep2')}</li></ol>}
+        {mode !== 'prompt' && steps && <InstallSteps mode={mode} t={t} />}
       </div>
       <div className="install-actions">
         {mode === 'prompt'

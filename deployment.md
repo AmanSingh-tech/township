@@ -30,8 +30,8 @@ On the live app or a local run. Each step names the login to use (section 2).
 5. **Bank matching (the hard part).** Sign in as accounts (`9000000004`) → Bank matching → **download the sample
    statement** → drop it back in. Confident credits post themselves; the rest wait with their evidence and suggested
    flats. **Post here** on one; it then needs a second person: sign in as admin (`9000000005`) → Approvals → **Approve**.
-6. **Install it.** On an Android phone or desktop Chrome, the resident home shows **Install**; on an iPhone, tap **How** for
-   the two Safari steps. Installed, it opens full screen with its own icon and shortcuts (Pay, Report, Guest code).
+6. **Install it.** Use **Install app** in the top bar (front page, resident app) or the desk sidebar: Chrome and Edge on
+   a desktop or Android phone open their install prompt; Safari on an iPhone, iPad or Mac shows its steps. Installed, it opens full screen with its own icon and shortcuts (Pay, Report, Guest code).
 7. **Committee view.** Sign in as committee (`9000000002`) → Committee report: collections, dues ageing, complaint times
    and the brief's three targets. **Sign off** freezes the month.
 

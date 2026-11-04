@@ -3,6 +3,7 @@ import { api, getSession, setSession } from '../../api.js';
 import { ThemeSwitch } from '../../theme.jsx';
 import { Icon, useApi, usePoll } from '../../ui.jsx';
 import { LOGO } from '../../brand.js';
+import InstallButton from '../../InstallButton.jsx';
 
 export const can = (role, area) => ({
   complaints: ['helpdesk', 'admin'],
@@ -51,6 +52,7 @@ export default function DeskShell() {
           {can(user.role, 'admin') && <NavLink to="/desk/admin"><Icon name="shield" size={18} />Admin</NavLink>}
         </nav>
         <div className="who stack" style={{ gap: 10 }}>
+          <InstallButton variant="side" />
           <ThemeSwitch compact />
           <div><b style={{ fontWeight: 500 }}>{user.name}</b><div className="faint tiny">{ROLE_LABEL[user.role]}</div></div>
           <button className="link small row" style={{ gap: 6 }} onClick={signOut}><Icon name="logout" size={16} />Sign out</button>

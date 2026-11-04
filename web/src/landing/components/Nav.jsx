@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { prefersReducedMotion } from '../motion/gsap.js';
+import InstallButton from '../../InstallButton.jsx';
 import { LOGO } from '../../brand.js';
 
 // Scrolls to a section anchor. Anchors sit outside pinned sections, so the
@@ -48,6 +49,7 @@ export default function Nav({ cta }) {
           <a href="#gate" onClick={jumpTo('gate')}>Gate</a>
           <a href="#accounts" onClick={jumpTo('accounts')}>Accounts</a>
         </nav>
+        <InstallButton variant="pill" className="lp-install" />
         <Link className="lp-btn sm" to={cta.to}>{cta.label}</Link>
       </div>
     </header>

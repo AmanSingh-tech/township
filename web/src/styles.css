@@ -629,3 +629,20 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 .install-card .tiny { color: var(--muted); }
 .install-actions { display: flex; gap: 4px; align-items: center; }
 .install-steps { margin: 6px 0 0; padding-left: 18px; }
+
+/* Install button for navigation bars */
+.install-btn { position: relative; display: inline-flex; }
+.install-btn > button { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.install-btn.side > button { width: 100%; padding: 8px 10px; border-radius: var(--radius-sm); color: var(--ink-2); font-size: var(--text-sm); }
+.install-btn.side > button:hover { background: var(--fill); color: var(--fg); }
+.install-btn.side { display: flex; }
+.install-btn.icon > button { width: 36px; height: 36px; justify-content: center; border-radius: 50%; background: var(--fill); color: var(--fg); }
+.install-btn.pill > button { height: 34px; padding: 0 14px; border-radius: 999px; font-size: 14px; font-weight: 500; box-shadow: inset 0 0 0 1px currentColor; opacity: 0.85; }
+.install-btn.pill > button:hover { opacity: 1; }
+.install-pop { position: absolute; z-index: 60; top: calc(100% + 8px); right: 0; width: 260px; padding: 12px 14px; border-radius: 14px; background: var(--surface); color: var(--fg); border: 1px solid var(--line); box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.35); text-align: left; }
+.install-btn.side .install-pop { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; }
+.install-pop b { display: block; font-size: 14px; margin-bottom: 4px; }
+@media (max-width: 480px) {
+  .install-btn.pill > button { width: 34px; padding: 0; justify-content: center; }
+  .install-btn.pill > button span { display: none; }
+}
