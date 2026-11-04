@@ -1,8 +1,10 @@
 import { many, q } from '../db.js';
 
-// Society settings, editable by an admin. Defaults follow the Maharashtra
-// model bye-laws: maintenance on carpet area, simple interest on arrears
-// after the due date (21% a year is the ceiling; the society may adopt less).
+// Society settings, editable by an admin. Maintenance is billed on carpet area,
+// with simple interest on arrears after the due date. The 21% a year default is
+// a configurable demonstration rate: the actual applicable rate must be
+// confirmed against the federation's adopted bye-laws before production
+// (TDD, assumption A2).
 export const DEFAULTS = {
   societyName: 'Township',
   ratePerSqft: 6.5,

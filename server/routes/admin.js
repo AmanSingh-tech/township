@@ -98,6 +98,7 @@ r.put('/settings', h(async (req, res) => {
     ratePerSqft: (v) => typeof v === 'number' && v > 0 && v < 100,
     billDay: (v) => Number.isInteger(v) && v >= 1 && v <= 28,
     dueDay: (v) => Number.isInteger(v) && v >= 1 && v <= 28,
+    // A sanity range for the demonstration, not a legal limit (TDD, A2).
     interestRatePa: (v) => typeof v === 'number' && v >= 0 && v <= 0.21,
     visitorPhotoRetentionDays: (v) => Number.isInteger(v) && v >= 1 && v <= 365,
     bankDetails: (v) => v === null || (typeof v === 'object' && typeof v.accountNumber === 'string'),
@@ -109,7 +110,7 @@ r.put('/settings', h(async (req, res) => {
   const changed = {};
   for (const [k, v] of Object.entries(b)) {
     if (!(k in DEFAULTS)) continue;
-    if (!checks[k]?.(v)) throw new HttpError(400, `Invalid value for ${k}${k === 'interestRatePa' ? ' (bye-laws cap interest at 21%)' : ''}.`);
+    if (!checks[k]?.(v)) throw new HttpError(400, `Invalid value for ${k}${k === 'interestRatePa' ? ' (0% to 21% a year here; confirm the rate in the federation\'s bye-laws)' : ''}.`);
     changed[k] = v;
   }
   await tx(async () => {

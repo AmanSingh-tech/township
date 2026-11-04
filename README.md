@@ -185,7 +185,8 @@ if Chrome is elsewhere). Set `SENTRY_DSN` to report server and browser errors to
 ### Money
 - **Ledger:** every rupee is a ledger line. The ledger, payments and audit log are **append-only, enforced
   by the database**; corrections are adjustments, never edits.
-- **Interest:** simple interest on overdue principal at the rate set under Settings (21% a year at most).
+- **Interest:** simple interest on overdue principal at the rate set under Settings. The 21% a year default is
+  a configurable demonstration rate; the actual applicable rate must be confirmed against the federation's adopted bye-laws before production.
   Payments settle interest first, then the oldest bills.
 - **Online payments (Razorpay):**
   - Orders are created on the server.
