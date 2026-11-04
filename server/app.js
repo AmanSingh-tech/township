@@ -8,6 +8,7 @@ import { verifyWebhookSignature, settleOrder } from './lib/razorpay.js';
 import { HttpError } from './lib/util.js';
 import { checkFileUrl, readFile } from './lib/storage.js';
 import { ROLES, allow, h } from './http.js';
+import { maintenanceGate } from './lib/maintenance.js';
 import { ACCOUNTS, DEMO_LOGINS, GUARD_PIN } from './demo/accounts.js';
 import * as Sentry from '@sentry/node';
 import authRoutes from './routes/auth.js';
@@ -54,6 +55,7 @@ export function createApp() {
   app.use(express.json({ limit: '8mb' }));
   app.use(express.text({ type: 'text/csv', limit: '10mb' }));
   app.use('/api', (req, res, next) => { req.meta = { ip: req.ip, userAgent: req.get('user-agent') }; next(); });
+  app.use('/api', maintenanceGate); // 503 while the demo data is being reset
   app.get('/api/health', (req, res) => res.json({ ok: true }));
   app.get('/api/client-config', (req, res) => res.json({
     sentryDsn: env.SENTRY_DSN || null, environment: env.NODE_ENV,

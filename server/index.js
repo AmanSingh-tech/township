@@ -27,7 +27,8 @@ if (env.DEMO_DATA && !(await one('SELECT 1 FROM users LIMIT 1'))) {
   console.log('Demo data loaded: sample township, logins in deployment.md.');
 }
 
-const run = () => housekeeping()
+const { isPaused } = await import('./lib/maintenance.js');
+const run = () => (isPaused() ? Promise.resolve({}) : housekeeping())
   .then((r) => r.photosDeleted && console.log(`Deleted ${r.photosDeleted} visitor photos past retention`))
   .catch((e) => console.error('Housekeeping:', e.message));
 await run();

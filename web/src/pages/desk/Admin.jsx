@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../../api.js';
+import { api, setSession } from '../../api.js';
 import { ago, date } from '../../format.js';
 import { useApi, Skeleton, Empty, useToast } from '../../ui.jsx';
 
@@ -385,6 +385,45 @@ function Messages() {
   );
 }
 
+// Demo mode only: put the sample township back as it was, so the next
+// reviewer starts from the same data. Two steps, so it is never a slip.
+function DemoReset() {
+  const toast = useToast();
+  const [demo, setDemo] = useState(false);
+  const [step, setStep] = useState('idle'); // idle · confirm · running · failed
+  const [error, setError] = useState('');
+  useEffect(() => { fetch('/api/client-config').then((r) => r.json()).then((c) => setDemo(!!c.demoLogins?.length)).catch(() => {}); }, []);
+  if (!demo) return null;
+  async function run() {
+    setStep('running'); setError('');
+    try {
+      const r = await api('/admin/demo/reset', { method: 'POST', body: {} });
+      toast(`Demo data reset (${new Date(r.at).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}). Please sign in again.`);
+      setTimeout(() => { setSession(null); location.href = '/login'; }, 1200);
+    } catch (e) { setStep('failed'); setError(e.message); }
+  }
+  return (
+    <section className="card row between wrap" style={{ gap: 14 }}>
+      <div style={{ maxWidth: 620 }}>
+        <b>Demo data</b>
+        <p className="muted small" style={{ marginTop: 4 }}>
+          Puts the sample township back as it was on first start: bills, payments, complaints, visitors and bookings.
+          Everyone is signed out. The reset is recorded in the audit log.
+        </p>
+        {step === 'failed' && <p className="notice danger small" style={{ marginTop: 8 }}>Reset failed: {error}</p>}
+      </div>
+      {step === 'confirm' ? (
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn" onClick={() => setStep('idle')}>Cancel</button>
+          <button className="btn danger" onClick={run}>Yes, reset everything</button>
+        </div>
+      ) : (
+        <button className="btn" disabled={step === 'running'} onClick={() => setStep('confirm')}>{step === 'running' ? 'Resetting…' : 'Reset demo data'}</button>
+      )}
+    </section>
+  );
+}
+
 export default function Admin() {
   const [tab, setTab] = useState('users');
   const Panel = { users: Users, devices: Devices, staff: Technicians, amenities: Amenities, settings: Settings, notices: Notices, requests: DataRequests, messages: Messages, audit: Audit }[tab];
@@ -394,6 +433,7 @@ export default function Admin() {
         <div><h1>Admin</h1><p className="muted">Staff, gate tablets, technicians and society settings. Every change is recorded in the audit log.</p></div>
         <div className="tabs">{TABS.map(([k, l]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
       </div>
+      <DemoReset />
       <Panel />
     </div>
   );

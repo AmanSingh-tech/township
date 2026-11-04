@@ -2,6 +2,7 @@ import { q, many } from '../db.js';
 import { env } from '../env.js';
 import { sendAlertSms, SmsUnavailable } from './sms.js';
 import { pushToPhone } from './push.js';
+import { isPaused } from './maintenance.js';
 
 // Outbox: send() records the message inside the caller's transaction, and a
 // worker delivers it after commit. A message is never lost because a request
@@ -55,7 +56,7 @@ export async function drainOutbox(limit = 50, parallel = 10) {
 export function startOutboxWorker(idleMs = 1000) {
   let stopped = false, timer = null;
   const loop = async () => {
-    try { while (!stopped && (await drainOutbox()) > 0); } catch (e) { console.error('Outbox:', e.message); }
+    try { while (!stopped && !isPaused() && (await drainOutbox()) > 0); } catch (e) { console.error('Outbox:', e.message); }
     if (!stopped) timer = setTimeout(loop, idleMs).unref();
   };
   loop();

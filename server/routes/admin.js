@@ -8,6 +8,7 @@ import { audit } from '../lib/audit.js';
 import { listDataRequests, resolveDataRequest } from '../lib/privacy.js';
 import { listAmenities, saveAmenity, addBlackout } from '../lib/amenities.js';
 import { today, normalizePhone, HttpError } from '../lib/util.js';
+import { resetDemo } from '../lib/demoReset.js';
 
 const r = Router();
 const STAFF_ROLES = ['helpdesk', 'accounts', 'committee', 'guard', 'admin'];
@@ -149,5 +150,8 @@ r.post('/data-requests/:id/resolve', h(async (req, res) => res.json(await resolv
 // ---- Audit and messages ---------------------------------------------------------------------
 r.get('/audit', h(async (req, res) => res.json(await many('SELECT * FROM audit_log ORDER BY id DESC LIMIT 200'))));
 r.get('/messages', h(async (req, res) => res.json(await many('SELECT id, at, channel, to_addr, body, status, provider_ref, error FROM messages ORDER BY id DESC LIMIT 100'))));
+
+// Demo mode only (404 otherwise): restore the sample township. See lib/demoReset.js.
+r.post('/demo/reset', h(async (req, res) => res.json(await resetDemo(req.user, req.meta))));
 
 export default r;
