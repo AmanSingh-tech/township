@@ -424,3 +424,6 @@
 /* The download steps popover keeps light colours on the front page, in both themes. */
 .lp .install-pop { background: #fafaf8; color: #18181b; border-color: rgba(24, 24, 27, 0.1); }
 .lp .install-pop .tiny, .lp .install-pop li { color: #4b4b55; }
+/* The floating pill only on phones, where the bottom is in thumb's reach; wider
+ * screens already have the same buttons in the fixed top bar. */
+@media (min-width: 768px) { .lp-sticky { display: none; } }

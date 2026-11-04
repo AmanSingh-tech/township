@@ -126,7 +126,29 @@ function projector(theta, cx) {
   };
 }
 
-function drawFrame(out, face, theta, front, back, s) {
+// Draws a flat texture lying at depth z (front-facing or mirrored), in thin
+// vertical strips so it narrows and grows with perspective.
+function drawPlane(c, tex, z, facing, proj, cy, s, N) {
+  for (let i = 0; i < N; i++) {
+    const u0 = i / N, u1 = (i + 1) / N;
+    const x0 = facing ? (u0 - 0.5) * W : (0.5 - u0) * W;
+    const x1 = facing ? (u1 - 0.5) * W : (0.5 - u1) * W;
+    const [sx0, p0] = proj(x0, z), [sx1, p1] = proj(x1, z);
+    const p = (p0 + p1) / 2, h = H * p;
+    c.drawImage(tex, u0 * W * s, 0, (u1 - u0) * W * s, H * s,
+      Math.min(sx0, sx1) * s, (cy - h / 2) * s, Math.abs(sx1 - sx0) * s + 0.8, h * s);
+  }
+}
+
+// The phone's outline in one tone of metal, for the body layers.
+function silhouette(s, top, bottom) {
+  const c = canvas(W * s, H * s); const ctx = c.getContext('2d'); ctx.scale(s, s);
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, top); g.addColorStop(1, bottom);
+  rr(ctx, 0, 0, W, H, R); ctx.fillStyle = g; ctx.fill();
+  return c;
+}
+
+function drawFrame(out, face, theta, front, back, s, sils) {
   const ctx = out.getContext('2d');
   const cx = SEQ_WIDTH / 2, cy = SEQ_HEIGHT / 2;
   const cos = Math.cos(theta), sin = Math.sin(theta);
@@ -142,28 +164,16 @@ function drawFrame(out, face, theta, front, back, s) {
   ctx.fillStyle = sh; ctx.fillRect(-span * s, -span * s, span * 2 * s, span * 2 * s);
   ctx.restore();
 
-  // Edge: the side facing the camera. Side-on it runs the phone's full height
-  // with rounded ends; as the face turns towards the camera it shortens, so it
-  // stays hidden behind the face's rounded corners and never pokes out.
-  if (Math.abs(sin) > 0.02) {
-    const right = sin > 0, xe = right ? W / 2 : -W / 2;
-    const [ax, ap] = proj(xe, -DEPTH / 2), [bx, bp] = proj(xe, DEPTH / 2);
-    const left = Math.min(ax, bx), w = Math.abs(bx - ax), p = (ap + bp) / 2;
-    const h = (H - 2 * R * 0.62 * Math.abs(cos)) * p;
-    const top = cy - h / 2;
-    const metal = ctx.createLinearGradient(left * s, 0, (left + w) * s, 0);
-    metal.addColorStop(0, '#26282c'); metal.addColorStop(0.3, '#6a6e77'); metal.addColorStop(0.5, '#8b8f98');
-    metal.addColorStop(0.7, '#4b4e55'); metal.addColorStop(1, '#1c1d20');
-    rr(ctx, left * s, top * s, w * s, h * s, Math.min(w / 2, 14 * p) * s); ctx.fillStyle = metal; ctx.fill();
-    // Light along the rim, darker as the side turns away from the light.
-    rr(ctx, left * s, top * s, w * s, h * s, Math.min(w / 2, 14 * p) * s);
-    ctx.fillStyle = `rgba(0,0,0,${(1 - Math.abs(sin)) * 0.35})`; ctx.fill();
-    // Buttons: power on the right side, volume on the left.
-    if (w > 6) {
-      ctx.fillStyle = 'rgba(255,255,255,0.16)';
-      const btn = (y0, len) => { rr(ctx, (left + w * 0.3) * s, (cy + (y0 - H / 2) * p) * s, w * 0.4 * s, len * p * s, 2 * s); ctx.fill(); };
-      if (right) btn(150, 70); else { btn(130, 40); btn(185, 40); }
-    }
+  // Body: the phone's rounded outline stacked through its thickness, back to
+  // front, so the sides and corners are solid at every angle. The middle
+  // layers (the outermost part of the rounded rim) catch the most light.
+  const L = 12;
+  const layers = Array.from({ length: L + 1 }, (_, k) => -DEPTH / 2 + (DEPTH * k) / L);
+  layers.sort((a, b) => b * cos - a * cos); // farthest first
+  for (const z of layers) {
+    const d = Math.abs(z) / (DEPTH / 2);
+    const tone = sils[d < 0.4 ? 2 : d < 0.75 ? 1 : 0];
+    drawPlane(ctx, tone, z, true, proj, cy, s, 60);
   }
 
   // Face, front or back, drawn in thin vertical strips so it narrows and
@@ -176,16 +186,7 @@ function drawFrame(out, face, theta, front, back, s) {
   const fctx = face.getContext('2d');
   fctx.globalCompositeOperation = 'source-over';
   fctx.clearRect(0, 0, face.width, face.height);
-  const N = 140;
-  for (let i = 0; i < N; i++) {
-    const u0 = i / N, u1 = (i + 1) / N;
-    const x0 = isFront ? (u0 - 0.5) * W : (0.5 - u0) * W;
-    const x1 = isFront ? (u1 - 0.5) * W : (0.5 - u1) * W;
-    const [sx0, p0] = proj(x0, z), [sx1, p1] = proj(x1, z);
-    const p = (p0 + p1) / 2, h = H * p;
-    fctx.drawImage(tex, u0 * W * s, 0, (u1 - u0) * W * s, H * s,
-      Math.min(sx0, sx1) * s, (cy - h / 2) * s, Math.abs(sx1 - sx0) * s + 0.8, h * s);
-  }
+  drawPlane(fctx, tex, z, isFront, proj, cy, s, 140);
   // Turning away from the light darkens the face; a highlight sweeps across.
   fctx.globalCompositeOperation = 'source-atop';
   fctx.fillStyle = `rgba(0,0,0,${(1 - Math.abs(cos)) * 0.62})`;
@@ -206,11 +207,12 @@ const toBlobUrl = (c) => new Promise((resolve) => {
 export async function renderPhoneSequence({ count = 60, scale = 1.5, onProgress } = {}) {
   await document.fonts?.load('600 20px Inter').catch(() => {});
   const front = frontTexture(scale), back = backTexture(scale);
+  const sils = [silhouette(scale, '#2b2d32', '#1d1e21'), silhouette(scale, '#50545c', '#3a3d43'), silhouette(scale, '#8a8e97', '#61656d')];
   const out = canvas(SEQ_WIDTH * scale, SEQ_HEIGHT * scale);
   const face = canvas(SEQ_WIDTH * scale, SEQ_HEIGHT * scale);
   const urls = [];
   for (let i = 0; i < count; i++) {
-    drawFrame(out, face, (i / count) * Math.PI * 2, front, back, scale);
+    drawFrame(out, face, (i / count) * Math.PI * 2, front, back, scale, sils);
     urls.push(await toBlobUrl(out));
     if (i === 0 || i % 12 === 11 || i === count - 1) onProgress?.(urls.slice());
   }
