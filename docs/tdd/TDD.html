@@ -185,29 +185,44 @@ flowchart TD
   <tr><td>Fire, gas, lift stuck or shock always escalate</td><td>A rule run before the AI, in English, Hindi and Marathi; urgency is set to critical and can't be lowered</td></tr>
   <tr><td>Link duplicates, never close them</td><td>Reports of the same tower asset are linked to one job; each flat closes and rates its own</td></tr>
 </table>
-<p><b>Honest confidence.</b> The local model reports the share of matched keywords, discounted by <code>1 − 0.5<sup>n</sup></code>, so a single keyword gives about 50%, not 100%. Testing found that "strong smell of gas" had been filed as Housekeeping at 100%. Now the hazard sets the category, and both cases are tests.</p>
-<figure><img src="img/desk-matching.jpg" alt=""><figcaption>Bank matching on the sample statement. The narration names T10-1707, but the UPI ID is registered to T09-1802. Both are strong evidence, so the credit is queued with both flats and their reasons instead of being posted.</figcaption></figure>
+<h3>Measured, not assumed</h3>
+<p><code>npm run eval</code> scores both automations and writes <code>docs/evaluation.md</code>; a test holds each promise below as a floor.</p>
+<table>
+  <tr><th style="width:48%">Complaint triage: 90 labelled complaints (EN, HI, MR, Hinglish)</th><th>Local model</th></tr>
+  <tr><td>Category right; right when it says it is sure</td><td>81%; 100% (35% of complaints)</td></tr>
+  <tr><td>Flagged "AI unsure" for the help desk to check</td><td>64%</td></tr>
+  <tr><td>Hazards escalated; false alarms</td><td>14 of 14; 0</td></tr>
+</table>
+<table>
+  <tr><th style="width:48%">Bank matching: 5 statements, 140 credits with known flats, 30 other rows</th><th>Result</th></tr>
+  <tr><td>Posted automatically; <b>posted to the wrong flat</b></td><td>55%; <b>0</b></td></tr>
+  <tr><td>Queued with the right flat as the top suggestion</td><td>98% (100% in the top three)</td></tr>
+  <tr><td>Matching time against doing it by hand (the brief's target: −80%)</td><td>−88% (assumed 2 min a row by hand, 30 s to confirm a suggestion)</td></tr>
+</table>
+<p><b>What the first run found.</b> Hindi and Marathi words were being split on their vowel signs, so their keywords never matched (50% right; now 86% and 71%). The safety rule missed the Marathi "अडकले" (stuck) and raised alarms on "लिफ्ट बंद" (the lift is off) and "fire lane". All three are fixed. The local model is cautious: it flags most complaints as unsure, which costs the help desk a tap, never a wrong job. With a Claude key the same set runs with <code>--claude</code>.</p>
+<figure><img src="img/desk-matching.jpg" alt="" style="max-width:62%"><figcaption>A credit whose narration names T10-1707 while its UPI ID is registered to T09-1802. Two strong signals disagree, so it is queued with both flats and their evidence instead of being posted.</figcaption></figure>
 
 <h2>7. UI and design</h2>
-<p>The brief asks for minimal design: white space, a restrained palette and nothing without a purpose. Each screen has one accent colour for the next action, flat cards, light and dark themes, and loading, empty and error states from shared components. Phone screens use bottom tabs within thumb reach. The desk is denser, for a working day.</p>
+<p>The brief asks for minimal design and every action within two taps. Warm neutrals with one lilac accent for the next action; six soft tints only to tell categories, people and amenities apart; light and dark themes; loading, empty and error states from shared components. Small interactions carry meaning: the dues card opens into what makes up the amount, a tapped month in Bills shows its sum, a waiting visitor pulses on the timeline, and guest codes count down. Animations stop when the phone asks for reduced motion. The desk is denser, for a working day, and the committee report leads with the brief's three targets.</p>
 <div class="two">
   <figure><img src="img/res-home.jpg" alt=""><figcaption>Resident home: dues first, with the overdue days and interest stated; complaints and visitors one tap away.</figcaption></figure>
   <figure><img src="img/gate.jpg" alt=""><figcaption>Gate tablet with the network down: very large buttons, a dark screen for night, "Offline · saved on tablet", language switch, and the DPDP notice to visitors.</figcaption></figure>
 </div>
+<figure><img src="img/report-goals.jpg" alt=""><figcaption>Committee report: the brief's success measures from where the society started, with the six-month target.</figcaption></figure>
 
 <h2>8. Security and testing</h2>
 <ul>
   <li><b>Sign-in:</b> codes stored as hashes, valid for 5 minutes with 5 tries, at most 3 per number an hour. Unknown numbers get the same reply as known ones.</li>
   <li><b>Access:</b> every route declares its roles, and residents only ever reach their own flat. Inputs are validated on every route, and CSV exports can't run spreadsheet formulas.</li>
   <li><b>Data:</b> no secrets in the repository (only <code>.env.example</code>), and photos are served through 15-minute signed links. Under the DPDP Act: consent, data download, erasure, and visitor photos deleted after 90 days.</li>
-  <li><b>Tests:</b> 51 server and 6 browser tests, all passing. They cover the brief's sample flats, interest, gapless receipts, every matching case, safety words in three languages, role access and two-person approvals.</li>
+  <li><b>Tests:</b> 53 server and 6 browser tests, all passing. They cover the brief's sample flats, interest, gapless receipts, every matching case, safety words in three languages, role access, two-person approvals, and the evaluation floors (no wrong posts, every hazard caught).</li>
   <li><b>Load test</b> at full size (2,400 flats, a year of data): 95% of requests under 28 ms at five times peak; a bill run for every flat in 4.1 s; 2,400 bank credits matched in 17.5 s.</li>
 </ul>
 
 <h2>9. Cut, next and limits</h2>
 <ul>
   <li><b>Cut:</b> WhatsApp (needs Meta business approval), real SMS and payments (mocked, as the brief allows, following the real providers' steps), native apps, and technician sign-in.</li>
-  <li><b>Next:</b> measure AI accuracy from the stored guesses and corrections and tune the 0.6 threshold; remember UPI IDs by default to raise automatic matching; WhatsApp alerts through the same outbox; bank feeds instead of CSV uploads.</li>
+  <li><b>Next:</b> grow the labelled set from the help desk's corrections (the AI's guess is stored with every complaint) and compare Claude on it; remember UPI IDs by default, the biggest lever on automatic matching (family members' IDs are 10% of credits); WhatsApp alerts through the same outbox; bank feeds instead of CSV uploads.</li>
   <li><b>Limits:</b> Render free plan (sleeps when idle; uploaded photos are lost on restart); a keyword-based local classifier, with anything unsure going to a person; one server process.</li>
 </ul>
 

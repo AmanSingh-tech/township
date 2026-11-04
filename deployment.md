@@ -40,7 +40,8 @@ npm run dev                                                        # API :4000, 
 Tests:
 
 ```bash
-npm test             # 51 server tests: billing, interest, matching, complaints, roles, security
+npm test             # 53 server tests: billing, interest, matching, complaints, roles, security, evaluation floors
+npm run eval         # scores complaint triage and bank matching; writes docs/evaluation.md
 npm run test:e2e     # 6 browser tests (needs Chrome; set CHROME_PATH if it is not /usr/bin/google-chrome)
 npm run load:seed && npm run load:run      # optional: full-size load test, 2,400 flats
 ```
