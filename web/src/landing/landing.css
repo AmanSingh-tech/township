@@ -331,3 +331,77 @@
 .lp-nav.on-light .lp-install > button { color: var(--lp-ink); box-shadow: inset 0 0 0 1px var(--lp-line); }
 .lp-nav-in > .lp-btn { white-space: nowrap; }
 @media (max-width: 767px) { .lp-nav-in > .lp-install { margin-left: auto; } .lp-nav-in > .lp-install + .lp-btn { margin-left: 0; } }
+
+/* ==== Chapters ====================================================================
+ * Each section is a chapter with its own colour, labelled in its top corners, and
+ * most arrive over the last one: as a rounded sheet (sliding up with a tilt) or
+ * through an opening circle. Headlines are tall serif capitals; giant faded type
+ * sits behind some chapters. The flow comes from the shared type, the labels and
+ * the sticky pill, so each chapter can look different. */
+.lp {
+  --lp-serif: 'Instrument Serif', 'Iowan Old Style', 'Times New Roman', serif;
+  --ch-lilac: #e9c9f0; --ch-paper: #f7f5f0; --ch-espresso: #2a1d16; --ch-butter: #f1e2b5;
+  --ch-radius: 32px;
+}
+.lp-display, .lp-h, .lp-h2 { font-family: var(--lp-serif); font-weight: 400; text-transform: uppercase; letter-spacing: -0.005em; }
+.lp-display { font-size: clamp(64px, min(12.5vw, 19svh), 196px); line-height: 0.86; }
+.lp-h { font-size: clamp(50px, 7.4vw, 124px); line-height: 0.88; }
+.lp-h2 { font-size: clamp(42px, 5.4vw, 86px); line-height: 0.9; }
+.sw { padding-top: 0.06em; }
+
+.lp-chapter { position: absolute; z-index: 6; top: calc(56px + 16px); left: max(var(--lp-gutter), calc(50% - 580px)); right: max(var(--lp-gutter), calc(50% - 580px)); display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 500; letter-spacing: 0.01em; opacity: 0.62; pointer-events: none; }
+.lp-bigtype { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; white-space: nowrap; pointer-events: none; font-family: var(--lp-serif); line-height: 0.8; letter-spacing: -0.02em; }
+
+/* 02 · The app: lilac, with the amount due drifting behind the phone */
+.lp-spin { background: var(--ch-lilac); color: var(--lp-ink); }
+.lp-spin::after { display: none; }
+.lp-spin-glow { background: radial-gradient(closest-side, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.18) 60%, transparent); }
+.lp-spin-head .lp-eyebrow { color: #7b3f80; }
+.lp-spin-big { font-size: clamp(160px, 27vw, 440px); color: rgba(123, 63, 128, 0.13); }
+.lp-spin-device { z-index: 1; }
+.lp-cap span { color: #5b4a5e; }
+
+/* 03 · Every day: a white sheet over the lilac */
+.lp-story { background: var(--ch-paper); border-radius: var(--ch-radius) var(--ch-radius) 0 0; margin-top: calc(var(--ch-radius) * -1); z-index: 2; }
+
+/* 04 · In numbers: espresso, opened through a circle */
+.lp-portal-wrap { background: var(--ch-paper); position: relative; z-index: 2; }
+.lp-numbers { position: relative; overflow: hidden; background: radial-gradient(80% 60% at 50% 0%, #3a281e, transparent 70%), var(--ch-espresso); color: #f3ead9; }
+.lp-numbers .lp-lead, .lp-numbers .lp-stat-l, .lp-numbers .lp-stat-v small { color: #c9b8a4; }
+.lp-numbers-big { font-size: clamp(220px, 34vw, 560px); color: rgba(243, 234, 217, 0.05); }
+.lp-numbers .lp-wrap { position: relative; z-index: 1; }
+.lp-stat-v { font-family: var(--lp-serif); font-weight: 400; font-size: clamp(76px, 9vw, 144px); letter-spacing: -0.02em; }
+.lp-numbers .lp-stat.c0 { border-top-color: #e7afe7; } .lp-numbers .lp-stat.c1 { border-top-color: #f7c8a8; } .lp-numbers .lp-stat.c2 { border-top-color: #f4d98a; }
+.lp-numbers .lp-stat.c3 { border-top-color: #b8dcae; } .lp-numbers .lp-stat.c4 { border-top-color: #bcd3f2; } .lp-numbers .lp-stat.c5 { border-top-color: #f3b8c4; }
+
+/* 05 · At the gate: a night sheet */
+.lp-gate { border-radius: var(--ch-radius) var(--ch-radius) 0 0; margin-top: calc(var(--ch-radius) * -1); z-index: 3; }
+
+/* 06 · Trust: a butter sheet, the ledger in serif */
+.lp-ledger { position: relative; z-index: 4; background: var(--ch-butter); color: var(--lp-ink); border-radius: var(--ch-radius) var(--ch-radius) 0 0; margin-top: calc(var(--ch-radius) * -1); padding-top: clamp(130px, 14vw, 190px); }
+.lp-ledger .lp-eyebrow { color: #7b3f80; }
+.lp-ledger-text { font-family: var(--lp-serif); font-weight: 400; font-size: clamp(38px, 5.2vw, 80px); line-height: 1.02; letter-spacing: -0.01em; max-width: 25ch; }
+.lp-ledger-foot div { border-top-color: rgba(24, 24, 27, 0.25) !important; }
+.lp-ledger-foot span { color: #6b5d3f; }
+
+/* 07 · Getting started: black, with the logo */
+.lp-closing { position: relative; z-index: 5; background: radial-gradient(70% 50% at 50% 0%, #2b1430, transparent 70%), #0c0a0b; color: var(--lp-inv); border-radius: var(--ch-radius) var(--ch-radius) 0 0; margin-top: calc(var(--ch-radius) * -1); }
+.lp-closing-logo { display: block; width: 84px; height: 84px; margin: 0 auto 30px; border-radius: 22px; box-shadow: 0 0 0 1px rgba(236, 210, 243, 0.3), 0 30px 60px -18px rgba(214, 150, 222, 0.55); }
+.lp-closing .lp-note { color: var(--lp-inv-2); }
+.lp-role { color: var(--fg); }
+.lp-role span { color: var(--muted); }
+.lp-closing .lp-foot { border-top-color: rgba(255, 255, 255, 0.1); color: var(--lp-inv-2); }
+.lp-closing .lp-foot a:hover { color: var(--lp-inv); }
+
+/* Sticky pill */
+.lp-sticky { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 55; display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 999px; background: rgba(250, 250, 248, 0.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 14px 34px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.06); transform: translate(-50%, 160%); opacity: 0; transition: transform 0.55s var(--lp-ease), opacity 0.3s; }
+.lp-sticky.show { transform: translate(-50%, 0); opacity: 1; }
+.lp-sticky img { width: 30px; height: 30px; border-radius: 9px; margin-left: 2px; }
+.lp-sticky .install-btn.icon > button { background: rgba(24, 24, 27, 0.07); color: #18181b; width: 34px; height: 34px; }
+.lp-sticky .install-pop { top: auto; bottom: calc(100% + 10px); }
+@media (prefers-reduced-motion: reduce) { .lp-sticky { transition: opacity 0.2s; } }
+
+.lp-story .lp-h2 { font-size: clamp(40px, 4.4vw, 74px); }
+.lp-story.is-animated .lp-steps { min-height: 400px; }
+.lp-step .lp-h2 { margin-bottom: 10px; }
+@media (max-width: 767px) { .lp-story.is-animated .lp-steps { min-height: 260px; } .lp-story .lp-h2 { font-size: clamp(32px, 9vw, 44px); } .lp-chapter { top: calc(56px + 10px); font-size: 11px; } }

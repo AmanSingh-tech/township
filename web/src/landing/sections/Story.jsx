@@ -3,6 +3,7 @@ import { gsap, prefersReducedMotion } from '../motion/gsap.js';
 import { useScene } from '../motion/useScene.js';
 import { Phone } from '../components/Devices.jsx';
 import { PayScreen, FixScreen, VisitorScreen, BookScreen } from '../components/screens.jsx';
+import Chapter from '../components/Chapter.jsx';
 
 const STEPS = [
   { tab: 'Pay', title: 'Dues, paid\nbefore dinner.', body: 'See exactly what is owed and why, pay by UPI or card, and keep every receipt in one place. Interest is shown, never hidden.', Screen: PayScreen, glow: '#d58fdf' },
@@ -45,8 +46,9 @@ export default function Story() {
     tl.addLabel('s0', 0);
     for (let i = 1; i < n; i++) {
       tl.to(steps[i - 1], { autoAlpha: 0, y: -36, duration: 0.4 }, i - 0.55)
-        .fromTo(steps[i], { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 0.45 }, i - 0.35)
-        .from(steps[i].querySelectorAll('.lp-eyebrow, .lp-line, .lp-lead'), { yPercent: 60, duration: 0.45, stagger: 0.05 }, i - 0.35)
+        // Everything lands before the step's label, so a settled scroll never leaves a line half-way.
+        .fromTo(steps[i], { autoAlpha: 0, y: 36 }, { autoAlpha: 1, y: 0, duration: 0.38 }, i - 0.45)
+        .fromTo(steps[i].querySelectorAll('.lp-eyebrow, .lp-line, .lp-lead'), { yPercent: 60 }, { yPercent: 0, duration: 0.32, stagger: 0.03 }, i - 0.45)
         .to(screens[i - 1], { autoAlpha: 0, scale: 0.94, duration: 0.4 }, i - 0.55)
         .fromTo(screens[i], { autoAlpha: 0, scale: 1.06 }, { autoAlpha: 1, scale: 1, duration: 0.45 }, i - 0.4)
         .to(phone, { rotateY: i % 2 ? -14 : 14, rotateX: 4, duration: 0.3, ease: 'sine.inOut' }, i - 0.55)
@@ -72,6 +74,7 @@ export default function Story() {
 
   return (
     <section className="lp-story" data-nav="light" ref={ref} style={{ '--lp-glow': STEPS[0].glow }} aria-label="What residents can do">
+      <Chapter about="every day" n={3} />
       <div className="lp-story-in">
         <div className="lp-story-stage" aria-hidden="true">
           <div className="lp-story-glow" />

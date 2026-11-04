@@ -11,6 +11,8 @@ import Numbers from './sections/Numbers.jsx';
 import Gate from './sections/Gate.jsx';
 import Ledger from './sections/Ledger.jsx';
 import Closing from './sections/Closing.jsx';
+import StickyCta from './components/StickyCta.jsx';
+import '@fontsource/instrument-serif/latin-400.css';
 import './landing.css';
 
 // The public front page. Each section owns its animation (see motion/); this
@@ -39,13 +41,14 @@ export default function Landing() {
         <Spin />
         <span id="residents" className="lp-anchor" />
         <Story />
-        <Numbers />
+        <div className="lp-portal-wrap"><Numbers /></div>
         <span id="gate" className="lp-anchor" />
         <Gate />
         <span id="accounts" className="lp-anchor" />
         <Ledger />
         <Closing cta={cta} demo={demo} />
       </main>
+      <StickyCta cta={cta} />
     </div>
   );
 }

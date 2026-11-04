@@ -9,6 +9,7 @@ import { Phone } from '../components/Devices.jsx';
 import { HomeScreen } from '../components/screens.jsx';
 import Icon from '../components/Icon.jsx';
 import { jumpTo } from '../components/Nav.jsx';
+import Chapter from '../components/Chapter.jsx';
 
 export default function Hero({ cta }) {
   const ref = useRef(null);
@@ -45,6 +46,7 @@ export default function Hero({ cta }) {
         <div className="lp-float f3" data-speed="0.1" aria-hidden="true"><div className="lp-float-in"><i className="tint-peach"><Icon name="fix" /></i><span><b>Plumber on the way</b>Water leak · 2:40 pm</span></div></div>
       </div>
       <div className="lp-hero-fade" aria-hidden="true" />
+      <Chapter about="Township" n={1} />
       <div className="lp-hero-copy">
         <p className="lp-hero-eyebrow">Township</p>
         <SplitWords as="h1" className="lp-display" text="Home, handled." />

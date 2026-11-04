@@ -4,6 +4,8 @@ import { useScene } from '../motion/useScene.js';
 import { fadeUp, revealWords } from '../motion/effects.js';
 import SplitWords from '../components/SplitWords.jsx';
 import Icon from '../components/Icon.jsx';
+import { LOGO } from '../../brand.js';
+import Chapter from '../components/Chapter.jsx';
 
 const ROLES = [
   ['Residents', 'Pay, report, approve visitors, book.', '/login'],
@@ -19,8 +21,10 @@ export default function Closing({ cta, demo }) {
     fadeUp(q('.lp-closing-ctas, .lp-role'), { trigger: el, start: 'top 60%', delay: 0.35, stagger: 0.07 });
   });
   return (
-    <section className="lp-closing" data-nav="light" ref={ref}>
+    <section className="lp-closing" ref={ref}>
+      <Chapter about="getting started" n={7} />
       <div className="lp-wrap">
+        <img className="lp-closing-logo" src={LOGO} alt="" />
         <SplitWords as="h2" className="lp-h" text="Your township is ready." />
         <div className="lp-closing-ctas">
           <Link className="lp-btn lg" to={cta.to}>{cta.label}</Link>

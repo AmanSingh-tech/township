@@ -24,6 +24,8 @@ minute). Demo sign-ins are listed on the sign-in page; codes appear on screen be
 
 <img src="docs/screenshots/landing.jpg" width="890" alt="Front page">
 
+<img src="docs/screenshots/landing-chapters.jpg" width="890" alt="The front page's chapters">
+
 ## What it does
 
 | Who | Features |
@@ -96,7 +98,10 @@ Warm and minimal, after OpenDesign's "Neutral Modern" structure, with a palette 
 - **Gate tablet:** always dark, for night shifts and glare.
 - **Charts:** colours checked for colour-blind safety and contrast in both themes.
 - **Logo:** a T made from a tower between two shorter ones, with a sun.
-- **Front page** (`/welcome`): a scroll-driven page built with GSAP, loaded on its own so the app carries none of it.
+- **Front page** (`/welcome`): seven chapters, each in its own colour (night, lilac, paper, espresso, night, butter,
+  black) and labelled in its corners. Each arrives over the last: as a rounded sheet that slides up with a tilt, or through an
+  opening circle. Tall serif capitals (Instrument Serif, bundled), giant faded figures behind some chapters, a turning
+  phone, and a sticky Sign in pill. Built with GSAP and loaded on its own, so the app carries none of it.
 
 ## Configuration
 

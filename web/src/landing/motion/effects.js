@@ -60,3 +60,21 @@ export function countUp(targets, { start = 'top 86%' } = {}) {
   });
   return () => { tweens.forEach((t) => t.kill()); els.forEach((el, i) => { el.textContent = finals[i]; }); };
 }
+
+// A chapter that arrives like a sheet laid on top of the last one: it rises
+// with a slight tilt and settles flat. Not for pinned sections (a transformed
+// ancestor would break the pin).
+export function sheetIn(el, { tilt = 2.4 } = {}) {
+  return gsap.fromTo(el, { rotate: tilt, yPercent: 7, transformOrigin: '50% 0%' }, {
+    rotate: 0, yPercent: 0, ease: 'none',
+    scrollTrigger: { trigger: el, start: 'top bottom', end: 'top 30%', scrub: true },
+  });
+}
+
+// A chapter revealed through a circle that opens as it scrolls in.
+export function portalIn(el, { at = '50% 55%' } = {}) {
+  return gsap.fromTo(el, { clipPath: `circle(6% at ${at})` }, {
+    clipPath: `circle(150% at ${at})`, ease: 'power1.in',
+    scrollTrigger: { trigger: el, start: 'top bottom', end: 'top top', scrub: true },
+  });
+}

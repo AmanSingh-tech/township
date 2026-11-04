@@ -6,6 +6,7 @@ import SplitWords from '../components/SplitWords.jsx';
 import ImageSequence from '../components/ImageSequence.jsx';
 import { usePhoneSequence } from '../frames/usePhoneSequence.js';
 import { SEQ_HEIGHT, SEQ_WIDTH } from '../frames/phoneSequence.js';
+import Chapter from '../components/Chapter.jsx';
 
 const CAPTIONS = [
   ['Two taps to pay.', 'UPI or card, with a numbered receipt the moment it clears.'],
@@ -32,7 +33,8 @@ export default function Spin() {
       // of its way before they meet.
       .fromTo(q('.lp-spin-device'), { scale: 0.72, yPercent: 34 }, { scale: 1, yPercent: 0, duration: 2.6, ease: 'power2.inOut' }, 0)
       .to(q('.lp-spin-head'), { autoAlpha: 0, y: -90, scale: 0.94, duration: 1.3, ease: 'power2.in' }, 0.2)
-      .fromTo(q('.lp-spin-glow'), { scale: 0.7, opacity: 0.5 }, { scale: 1.35, opacity: 1, duration: 10, ease: 'none' }, 0);
+      .fromTo(q('.lp-spin-glow'), { scale: 0.7, opacity: 0.5 }, { scale: 1.35, opacity: 1, duration: 10, ease: 'none' }, 0)
+      .fromTo(q('.lp-spin-big'), { xPercent: 12 }, { xPercent: -12, duration: 10, ease: 'none' }, 0);
     q('.lp-cap').forEach((c, i) => {
       const at = 1.8 + i * 2.7;
       tl.fromTo(c, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.7 }, at)
@@ -42,8 +44,10 @@ export default function Spin() {
   });
 
   return (
-    <section className="lp-spin" ref={ref}>
+    <section className="lp-spin" data-nav="light" ref={ref}>
       <div className="lp-spin-glow" aria-hidden="true" />
+      <Chapter about="the app" n={2} />
+      <div className="lp-bigtype lp-spin-big" aria-hidden="true">₹13,004</div>
       <div className="lp-spin-head">
         <p className="lp-eyebrow">The resident app</p>
         <SplitWords as="h2" className="lp-h" text={'One app.\nEvery corner of home.'} />

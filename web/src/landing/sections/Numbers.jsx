@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useScene } from '../motion/useScene.js';
-import { countUp, fadeUp, parallax, revealWords } from '../motion/effects.js';
+import { countUp, fadeUp, parallax, revealWords, portalIn } from '../motion/effects.js';
+import Chapter from '../components/Chapter.jsx';
 import SplitWords from '../components/SplitWords.jsx';
 
 // Figures from the full-size load test (see the README).
@@ -17,6 +18,8 @@ const fmt = (v, dec = 0) => v.toLocaleString('en-IN', { minimumFractionDigits: d
 export default function Numbers() {
   const ref = useRef(null);
   useScene(ref, ({ el, q, mobile }) => {
+    portalIn(el);
+    parallax(q('.lp-numbers-big'), el);
     revealWords(q('.lp-h'), { trigger: el, start: 'top 75%' });
     fadeUp(q('.lp-numbers-head .lp-lead'), { trigger: el, start: 'top 70%', delay: 0.3 });
     // Children fade in; the stat itself carries the parallax, so they never fight over y.
@@ -25,7 +28,9 @@ export default function Numbers() {
     return countUp(q('.lp-stat-v [data-value]'));
   });
   return (
-    <section className="lp-numbers" data-nav="light" ref={ref} aria-label="In numbers">
+    <section className="lp-numbers" ref={ref} aria-label="In numbers">
+      <Chapter about="scale" n={4} />
+      <div className="lp-bigtype lp-numbers-big" data-speed="-0.2" aria-hidden="true">2,400</div>
       <div className="lp-wrap">
         <div className="lp-numbers-head">
           <SplitWords as="h2" className="lp-h" text={'Built for a township,\nnot a building.'} />
