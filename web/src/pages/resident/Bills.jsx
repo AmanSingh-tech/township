@@ -28,7 +28,7 @@ export default function Bills() {
         <div className="row between">
           <div>
             <div className="faint small">{flat.id} · {flat.area} sq ft × {fmtRate(rate)}</div>
-            <div className="num" style={{ fontSize: 32, fontWeight: 600, letterSpacing: '-0.03em' }}><CountUp value={st.totalDue} /></div>
+            <div className="num bills-amount"><CountUp value={st.totalDue} /></div>
           </div>
           {st.totalDue > 0 && <button className="btn primary" onClick={() => setPaying(true)}>{t('payNow')}</button>}
         </div>

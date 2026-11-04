@@ -37,6 +37,7 @@
   --seq-0: #c49ac9; --seq-1: #a876ae; --seq-2: #8a5490; --seq-3: #6b3770; --seq-4: #4a1f50;
 
   --font-body: 'Inter', -apple-system, system-ui, sans-serif;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif; /* greetings, titles, big amounts */
   --font-deva: 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;
   --font-mono: ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace;
   --text-xs: 12px; --text-sm: 14px; --text-base: 16px; --text-lg: 20px; --text-xl: 24px; --text-2xl: 32px; --text-3xl: 48px;
@@ -58,8 +59,8 @@
 /* Dark: same names, structure after OpenDesign's dark system (linear-app). */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f0d0c; --surface: #1a1715; --fg: #f3f0eb; --muted: #a8a29e; --meta: #78716c;
-    --border: rgba(255, 255, 255, 0.09); --border-soft: rgba(255, 255, 255, 0.05);
+    --bg: #110c13; --surface: #1c1620; --fg: #f4eff5; --muted: #ada3b1; --meta: #807685;
+    --border: rgba(231, 175, 231, 0.13); --border-soft: rgba(231, 175, 231, 0.07);
     --accent: #e7afe7; --accent-on: #1a1018; --accent-fg: #e2b4e6; --accent-hover: color-mix(in oklab, var(--accent), white 14%);
     --accent-soft: color-mix(in oklab, var(--accent), transparent 84%);
     --success-fg: color-mix(in oklab, var(--success), white 30%); --warn-fg: var(--warn);
@@ -73,8 +74,8 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f0d0c; --surface: #1a1715; --fg: #f3f0eb; --muted: #a8a29e; --meta: #78716c;
-  --border: rgba(255, 255, 255, 0.09); --border-soft: rgba(255, 255, 255, 0.05);
+  --bg: #110c13; --surface: #1c1620; --fg: #f4eff5; --muted: #ada3b1; --meta: #807685;
+  --border: rgba(231, 175, 231, 0.13); --border-soft: rgba(231, 175, 231, 0.07);
   --accent: #e7afe7; --accent-on: #1a1018; --accent-fg: #e2b4e6; --accent-hover: color-mix(in oklab, var(--accent), white 14%);
   --accent-soft: color-mix(in oklab, var(--accent), transparent 84%);
   --success-fg: color-mix(in oklab, var(--success), white 30%); --warn-fg: var(--warn);
@@ -636,14 +637,17 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 .install-btn.side > button { width: 100%; padding: 8px 10px; border-radius: var(--radius-sm); color: var(--ink-2); font-size: var(--text-sm); }
 .install-btn.side > button:hover { background: var(--fill); color: var(--fg); }
 .install-btn.side { display: flex; }
-.install-btn.icon > button { width: 36px; height: 36px; justify-content: center; border-radius: 50%; background: var(--fill); color: var(--fg); }
+.install-btn.icon > button { width: 36px; height: 36px; justify-content: center; border-radius: 10px; color: var(--fg); }
+.install-btn.icon > button:hover { background: var(--fill); }
 .install-btn.pill > button { height: 34px; padding: 0 14px; border-radius: 999px; font-size: 14px; font-weight: 500; box-shadow: inset 0 0 0 1px currentColor; opacity: 0.85; }
 .install-btn.pill > button:hover { opacity: 1; }
 .install-pop { position: absolute; z-index: 60; top: calc(100% + 8px); right: 0; width: 260px; padding: 12px 14px; border-radius: 14px; background: var(--surface); color: var(--fg); border: 1px solid var(--line); box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.35); text-align: left; }
 .install-btn.side .install-pop { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; }
 .install-pop b { display: block; font-size: 14px; margin-bottom: 4px; }
 @media (max-width: 480px) {
-  .install-btn.pill > button { width: 34px; padding: 0; justify-content: center; }
+  /* On phones: just the icon, no ring. */
+  .install-btn.pill > button { width: 34px; padding: 0; justify-content: center; box-shadow: none !important; background: none !important; opacity: 1; }
+  .install-btn.pill > button svg { width: 20px; height: 20px; }
   .install-btn.pill > button span { display: none; }
 }
 
@@ -684,3 +688,25 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 .install-btn.link .install-pop, .install-btn.lg .install-pop { top: auto; bottom: calc(100% + 10px); }
 .install-btn.link .install-pop { right: 0; }
 .install-btn.lg .install-pop { left: 50%; right: auto; transform: translateX(-50%); }
+
+
+/* ---- Character: a warm night in dark mode, and a display serif for big moments ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body { background: radial-gradient(110% 55% at 50% -12%, #2c1632 0%, rgba(44, 22, 50, 0) 62%) fixed, var(--bg); }
+  :root:not([data-theme="light"]) .card, :root:not([data-theme="light"]) .ccard, :root:not([data-theme="light"]) .kpi, :root:not([data-theme="light"]) .quick-item { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px -18px rgba(0, 0, 0, 0.6); }
+}
+:root[data-theme="dark"] body { background: radial-gradient(110% 55% at 50% -12%, #2c1632 0%, rgba(44, 22, 50, 0) 62%) fixed, var(--bg); }
+:root[data-theme="dark"] .card, :root[data-theme="dark"] .ccard, :root[data-theme="dark"] .kpi, :root[data-theme="dark"] .quick-item { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px -18px rgba(0, 0, 0, 0.6); }
+.topbar { background: color-mix(in oklab, var(--bg), transparent 12%); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+
+.topbar .title, .main-head h1, .hd-amount, .qtile-n, .goal-now, .kpi .k-value, .bills-amount, .login .box h1 { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.01em; }
+.topbar .title { font-size: 28px; line-height: 1.05; }
+.main-head h1 { font-size: 40px; line-height: 1; }
+.hd-amount { font-size: 58px; letter-spacing: -0.015em; }
+.kpi .k-value { font-size: 38px; line-height: 1.05; }
+.goal-now { font-size: 36px; }
+.qtile-n { font-size: 32px; }
+.bills-amount { font-size: 42px !important; font-weight: 400 !important; letter-spacing: -0.01em !important; }
+.login .box h1 { font-size: 34px; line-height: 1.05; }
+@media (min-width: 960px) { .res .topbar .title { font-size: 38px; } .hd-amount { font-size: 66px; } }
+.side .brand, .res-side .brand { text-decoration: none; color: var(--fg); }
