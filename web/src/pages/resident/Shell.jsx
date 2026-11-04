@@ -3,6 +3,7 @@ import { useT } from '../../i18n.jsx';
 import { useState } from 'react';
 import { api, getSession, setSession } from '../../api.js';
 import { Icon, initials } from '../../ui.jsx';
+import { LOGO } from '../../brand.js';
 
 export default function ResidentShell() {
   const { t } = useT();
@@ -51,7 +52,7 @@ function Consent({ onDone }) {
   return (
     <div className="app" style={{ paddingTop: 32 }}>
       <div className="stack-lg">
-        <div className="brand"><img src="/icon.svg" alt="" /><span>Township</span></div>
+        <div className="brand"><img src={LOGO} alt="" /><span>Township</span></div>
         <h1>Your data</h1>
         <div className="stack muted" style={{ fontSize: 14.5 }}>
           <p>To run this app, the society office keeps your name, mobile number and flat, your maintenance bills and payments, complaints you raise with any photos, and visitors who come to your flat.</p>

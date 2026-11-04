@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, setSession } from '../api.js';
 import { useT, LANGS } from '../i18n.jsx';
 import { homeFor } from '../App.jsx';
+import { LOGO } from '../brand.js';
 
 export default function Login() {
   const { t, lang, setLang } = useT();
@@ -47,7 +48,7 @@ export default function Login() {
     <div className="login">
       <div className="box stack-lg">
         <div className="row between">
-          <Link to="/welcome" className="brand" style={{ textDecoration: 'none' }}><img src="/icon.svg" alt="" /><span>Township</span></Link>
+          <Link to="/welcome" className="brand" style={{ textDecoration: 'none' }}><img src={LOGO} alt="" /><span>Township</span></Link>
           <select className="input" style={{ width: 'auto', height: 36 }} value={lang} onChange={(e) => setLang(e.target.value)} aria-label="Language">
             {LANGS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
           </select>

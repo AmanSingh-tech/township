@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { prefersReducedMotion } from '../motion/gsap.js';
+import { LOGO } from '../../brand.js';
 
 // Scrolls to a section anchor. Anchors sit outside pinned sections, so the
 // target is where the section starts, however far its pin has run.
@@ -41,7 +42,7 @@ export default function Nav({ cta }) {
   return (
     <header className="lp-nav" ref={ref}>
       <div className="lp-nav-in">
-        <Link to="/welcome" className="lp-brand"><img src="/icon.svg" alt="" />Township</Link>
+        <Link to="/welcome" className="lp-brand"><img src={LOGO} alt="" />Township</Link>
         <nav className="lp-nav-links" aria-label="Sections">
           <a href="#residents" onClick={jumpTo('residents')}>Residents</a>
           <a href="#gate" onClick={jumpTo('gate')}>Gate</a>

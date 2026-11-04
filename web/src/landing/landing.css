@@ -60,7 +60,7 @@
 .lp-nav { position: fixed; inset: 0 0 auto; z-index: 50; color: var(--lp-inv); background: rgba(12, 12, 15, 0.62); backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px); border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
 .lp-nav-in { max-width: 1160px; margin: 0 auto; padding: 0 var(--lp-gutter); height: 56px; display: flex; align-items: center; gap: 24px; }
 .lp-brand { display: flex; align-items: center; gap: 9px; font-weight: 600; text-decoration: none; letter-spacing: -0.01em; }
-.lp-brand img { width: 24px; height: 24px; }
+.lp-brand img { width: 26px; height: 26px; border-radius: 7px; box-shadow: 0 0 0 1px rgba(236, 210, 243, 0.35); }
 .lp-nav-links { display: flex; gap: 26px; margin-left: auto; font-size: 14px; }
 .lp-nav { transition: background 0.4s var(--lp-ease), color 0.4s var(--lp-ease), border-color 0.4s; }
 .lp-nav.on-light { color: var(--lp-ink); background: color-mix(in oklab, var(--lp-light), transparent 22%); border-bottom-color: var(--lp-line); }

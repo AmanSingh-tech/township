@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { api, getSession, setSession } from '../../api.js';
 import { ThemeSwitch } from '../../theme.jsx';
 import { Icon, useApi, usePoll } from '../../ui.jsx';
+import { LOGO } from '../../brand.js';
 
 export const can = (role, area) => ({
   complaints: ['helpdesk', 'admin'],
@@ -34,7 +35,7 @@ export default function DeskShell() {
   return (
     <div className="desk">
       <aside className="side">
-        <div className="brand"><img src="/icon.svg" alt="" /><span>Township desk</span></div>
+        <div className="brand"><img src={LOGO} alt="" /><span>Township desk</span></div>
         <nav>
           {can(user.role, 'complaints') && <NavLink to="/desk" end><Icon name="inbox" size={18} />Complaints<span className={`count ${late ? 'alert' : ''}`}>{late ? `${late} late` : ''}</span></NavLink>}
           {can(user.role, 'money') && <>

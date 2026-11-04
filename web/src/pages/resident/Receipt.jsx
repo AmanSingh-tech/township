@@ -3,6 +3,7 @@ import { useT } from '../../i18n.jsx';
 import { inr, date } from '../../format.js';
 import { useApi, Skeleton, Icon } from '../../ui.jsx';
 import { api } from '../../api.js';
+import { LOGO } from '../../brand.js';
 
 export default function Receipt() {
   const { t } = useT();
@@ -17,7 +18,7 @@ export default function Receipt() {
       )}
       <article className="receipt">
         <div className="row between">
-          <div className="brand"><img src="/icon.svg" alt="" /><span>{t('receipt')}</span></div>
+          <div className="brand"><img src={LOGO} alt="" /><span>{t('receipt')}</span></div>
           <span className="mono faint">{r.receipt_no}</span>
         </div>
         <div style={{ marginTop: 22 }}>

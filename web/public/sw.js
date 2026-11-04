@@ -1,8 +1,8 @@
 // App shell cache so the app opens without a network. API calls always go to
 // the network; the gate tablet keeps its own offline queue for entries.
-const CACHE = 'township-v2';
+const CACHE = 'township-v3'; // bump to drop old cached files (e.g. a changed logo)
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/index.html', '/icon.svg', '/manifest.webmanifest'])));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/index.html', '/icon.svg?v=3', '/manifest.webmanifest'])));
   self.skipWaiting();
 });
 self.addEventListener('activate', (e) => {
@@ -28,7 +28,7 @@ self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data.json(); } catch { d = { body: e.data && e.data.text() }; }
   e.waitUntil(self.registration.showNotification(d.title || 'Township', {
-    body: d.body || '', icon: '/icon.svg', badge: '/icon.svg', data: { url: d.url || '/' }, tag: d.url || undefined, renotify: true,
+    body: d.body || '', icon: '/icon.svg?v=3', badge: '/icon.svg?v=3', data: { url: d.url || '/' }, tag: d.url || undefined, renotify: true,
   }));
 });
 self.addEventListener('notificationclick', (e) => {
