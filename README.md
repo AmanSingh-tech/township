@@ -1,11 +1,47 @@
+<p align="center"><img src="web/public/icon.svg" width="72" alt="Township logo"></p>
+
 # Township
 
-Society management for a 2,400-flat gated township:
+Society management for Company A's 2,400-flat, 28-tower township in Pune: residents pay maintenance, raise
+complaints, approve visitors and book the clubhouse from one installable web app; bank statements match themselves;
+guards log visitors on a tablet that keeps working offline; and the committee gets a monthly report it can trust.
 
-- **Resident app:** an installable web app for maintenance payments, complaints and visitor approval.
-- **Help desk and accounts:** a desk with bank statement matching and two-person approval of manual money decisions.
-- **Committee:** a monthly report built from the ledger.
-- **Gates:** a guard tablet app that keeps working through network drops.
+**Live:** https://township-91vm.onrender.com/welcome (Render free plan: the first visit after a quiet spell takes about a
+minute). Demo sign-ins are listed on the sign-in page; codes appear on screen because SMS is mocked.
+**Docs:** [Technical design](docs/Township-TDD.pdf) · [Deployment and demo logins](deployment.md) · [Evaluation](docs/evaluation.md)
+
+## Screens
+
+| Sign in | Home | Bills | Complaints | Visitors | Book | Dark mode |
+|---|---|---|---|---|---|---|
+| <img src="docs/screenshots/login.jpg" width="130"> | <img src="docs/screenshots/home.jpg" width="130"> | <img src="docs/screenshots/bills.jpg" width="130"> | <img src="docs/screenshots/complaints.jpg" width="130"> | <img src="docs/screenshots/visitors.jpg" width="130"> | <img src="docs/screenshots/book.jpg" width="130"> | <img src="docs/screenshots/home-dark.jpg" width="130"> |
+
+| Help desk queue | Bank matching |
+|---|---|
+| <img src="docs/screenshots/desk-queue.jpg" width="440"> | <img src="docs/screenshots/desk-matching.jpg" width="440"> |
+| **Committee report** | **Gate tablet, offline** |
+| <img src="docs/screenshots/desk-report.jpg" width="440"> | <img src="docs/screenshots/gate.jpg" width="440"> |
+
+<img src="docs/screenshots/landing.jpg" width="890" alt="Front page">
+
+## What it does
+
+| Who | Features |
+|---|---|
+| **Residents** (phone) | Sign in with a one-time code; home with dues, open complaints and today's visitors, every action within two taps; bills as area × rate with late interest per bye-laws, a six-month chart, test-mode payment, numbered receipts with PDFs and a ledger; complaints with photo, AI category and urgency, a live status timeline, rating or reopening; approve or deny visitors and send guest codes; book amenities by slot with fees on the bill; family and tenant members; notices; push alerts; English, Marathi and Hindi; light and dark |
+| **Help desk** | A queue sorted by safety, urgency and response deadline; auto-assignment to technicians by category and tower; one-tap category change with the AI's confidence shown; linked duplicates; status updates and notes; resident details with audited corrections |
+| **Accounts** | Bank CSV import that posts confident credits and queues the rest with reasons and suggestions; two-person approval of manual posts and adjustments; flats and ledgers; monthly bill runs; register import from Excel; Tally export |
+| **Committee** | Monthly report from the ledger: collections, dues ageing, complaint times and the brief's targets; approves bill runs; signs off a month, which freezes it with a fingerprint |
+| **Guards** (tablet) | Visitor entry with photo, resident approval, guest codes, very large buttons on a dark screen, an offline queue, PIN sign-in on a paired tablet, the DPDP notice on screen |
+| **Admin** | Settings (rate, due day, interest, bank), staff, technicians, gate tablets, amenities, notices, message outbox, data requests, audit log |
+
+**AI and automation, measured** (`npm run eval`, [full report](docs/evaluation.md)): on 90 labelled complaints the local
+classifier gets 81% of categories right and is right every time it says it is sure; all 14 hazards escalate with no
+false alarms. On five realistic month-end statements (140 credits), **no credit is posted to the wrong flat**, 55% post
+themselves, and matching takes about 88% less time than by hand (the brief's target is 80%).
+
+**Tested:** 53 server tests and 6 browser tests, plus a full-size load test (2,400 flats, 95% of requests under 28 ms at
+five times the bill-day peak).
 
 ## Runs free
 
@@ -17,7 +53,7 @@ credentials are missing, and each placeholder is clearly labelled where people s
 | SMS login codes (MSG91) | The code is shown on the sign-in screen, for registered numbers only |
 | Online payment (Razorpay) | A test gateway: same order and recording steps, a marked test checkout, receipts say "test payment, no money moved" |
 | Photo storage (S3) | The server's own disk (a Docker volume) |
-| Hosting (AWS) | `docker compose up --build` on any machine |
+| Hosting (AWS) | Render's free plan (`render.yaml`), or `docker compose up --build` on any machine |
 | Complaint AI (Claude) | The built-in keyword classifier |
 
 Push alerts are free already (`npm run cli -- vapid-keys`). Adding real credentials later switches each service on
@@ -26,40 +62,41 @@ with no code change.
 ### Quickest start: everything in Docker
 
 ```bash
-docker compose up --build       # app on http://localhost:4000
+docker compose up --build       # or docker-compose up --build; app on http://localhost:4000
 ```
 
-The database starts empty. For a populated township, also install Node 18+ and run
-`npm install && npm run dev:fixtures`, which loads sample flats, residents and logins into the Compose database.
+The sample township (the brief's three flats plus about 60 more, with residents, bills, complaints, visitors and
+bookings) loads on first start, because `DEMO_DATA=true` in `docker-compose.yml`. It only loads into an empty database.
 
 ## Run locally (development)
 
-Needs Node 18+ and Docker.
+Needs Node 20+ and Docker.
 
 ```bash
-docker run -d --name township-db -e POSTGRES_USER=township -e POSTGRES_PASSWORD=township \
-  -e POSTGRES_DB=township -p 5440:5432 -v township-pg:/var/lib/postgresql/data postgres:16-alpine
-docker exec township-db psql -U township -c "create database township_test"
+docker compose up -d db                                            # PostgreSQL 16 on localhost:5440
+docker compose exec db psql -U township -c "create database township_test"
 npm install
-cp .env.example .env          # optional locally; see Configuration
+npm run dev:fixtures          # sample township
 npm run dev                   # API :4000 (migrates on start), app http://localhost:5173
 ```
 
-The database starts empty. For a fully populated local township, run `npm run dev:fixtures`. It only loads into a local database and prints the logins to use. Without SMS configured, the login code is shown on the sign-in screen.
-
-`npm test` runs the suite against `township_test`. With the Compose database, create it once:
-`docker-compose exec db psql -U township -c "create database township_test"`.
+Without SMS configured, the login code is shown on the sign-in screen. `npm test` runs the suite against
+`township_test`; `npm run eval` scores the AI and the matching; `npm run test:e2e` runs the browser tests.
 
 ## Design
 
-Minimalist, after OpenDesign's "Neutral Modern" system (github.com/nexu-io/open-design, Apache-2.0):
+Warm and minimal, after OpenDesign's "Neutral Modern" structure, with a palette after grail-app.com:
 
-- **Tokens:** its token names and values (`web/src/styles.css`).
-- **Rules:** whitespace instead of boxes, flat cards with a 1px border, one accent (cobalt) per screen.
-- **Themes:** light and dark, chosen under Profile → Appearance (residents) or at the bottom of the desk sidebar (staff):
-  System follows the device, or pick Light or Dark.
+- **Palette:** warm off-white and zinc ink, one lilac accent (dark text on it) for the next action, plum for accent
+  text; a warm near-black dark mode. Six soft tints (lilac, peach, butter, sage, sky, rose) only tell categories,
+  people and amenities apart; green, amber and red are kept for status.
+- **Interaction:** the dues card opens into what makes up the amount, a tapped month in Bills shows its sum, a waiting
+  visitor pulses, guest codes count down, picked booking slots join into one block. CSS only, and off under reduced motion.
+- **Themes:** light and dark, chosen under Profile → Appearance (residents) or at the bottom of the desk sidebar (staff).
 - **Gate tablet:** always dark, for night shifts and glare.
-- **Charts:** their colours are checked for colour-blind safety in both themes.
+- **Charts:** colours checked for colour-blind safety and contrast in both themes.
+- **Logo:** a T made from a tower between two shorter ones, with a sun.
+- **Front page** (`/welcome`): a scroll-driven page built with GSAP, loaded on its own so the app carries none of it.
 
 ## Configuration
 
@@ -82,7 +119,7 @@ Set the Razorpay webhook to `https://<domain>/api/payments/razorpay/webhook` for
 
 ## Going live
 
-1. Deploy. Free: `docker compose up --build`. For a paid production setup on AWS Mumbai,
+1. Deploy. Free: Render with `render.yaml`, or `docker compose up --build`. For a paid production setup on AWS Mumbai,
    [infra/aws/README.md](infra/aws/README.md) has the Terraform and the step-by-step.
 2. Create the first administrator:
    `npm run cli -- create-admin --name "Full Name" --phone 98XXXXXXXX`
@@ -266,8 +303,11 @@ server/
   lib/            billing, matcher, csv, razorpay, sms, notify, auth, approvals,
                   complaints, classifier, report, settings, audit
   cli.js          migrate, create-admin, vapid-keys, grant-app-role, verify
-  test/           node:test suites and fixtures (never shipped)
-web/src/          React app: resident, desk, gate
+  demo/           the sample township, loaded on first start in demo mode
+  eval/           labelled complaints and statements; npm run eval
+  test/           node:test suites (never shipped)
+web/src/          React app: resident, desk, gate; landing/ is the front page
+docs/             technical design (PDF and source), evaluation, screenshots
 e2e/              browser tests of the main flows
 load/             full-size seed and load test
 infra/aws/        Terraform for AWS Mumbai, deploy and restore-drill scripts

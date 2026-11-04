@@ -63,7 +63,18 @@
   <tr><td>Bank matching</td><td>Accounts</td><td>Bank CSV in; confident credits post, unclear ones are queued</td></tr>
   <tr><td>Committee report</td><td>Committee</td><td>Collections, dues ageing, complaint times; signed and frozen monthly</td></tr>
 </table>
-<p class="muted">Also built as optional depth: family and tenant members, notices, gate tablets with photos and guest codes (working offline), amenity booking with fees, and a Tally export. Out of scope, as in the brief: accounting beyond maintenance, CCTV and barriers, a marketplace.</p>
+<p><b>Everything else that is built</b>, as optional depth from the brief's "must have":</p>
+<table>
+  <tr><th style="width:17%">Who</th><th>Features</th></tr>
+  <tr><td>Residents</td><td>Family and tenant members; notices; guest codes with a countdown; amenity booking by slot with rules, fees on the bill and free cancellation until a cut-off; receipts as PDFs; push alerts; English, Marathi and Hindi; light and dark; consent, data download and erasure requests (DPDP)</td></tr>
+  <tr><td>Help desk</td><td>Technicians per category and tower; response timers; linked duplicates; notes to the resident; audited corrections to residents' details</td></tr>
+  <tr><td>Accounts</td><td>Monthly bill runs; register import from Excel with a preview; Tally export; two-person approval of manual posts, adjustments and login-number changes</td></tr>
+  <tr><td>Committee</td><td>Approves bill runs; the brief's targets on the report; sign-off that freezes a month with a SHA-256 fingerprint</td></tr>
+  <tr><td>Guards</td><td>Paired tablets with PIN sign-in; visitor photo, approval and guest codes; an offline queue; the DPDP notice on screen; visitor photos deleted after 90 days</td></tr>
+  <tr><td>Admin</td><td>Settings, staff, technicians, gate tablets, amenities, notices, the message outbox, data requests, the audit log</td></tr>
+  <tr><td>Everyone</td><td>A scroll-driven front page at <code>/welcome</code>; demo logins on the sign-in page; an integrity check (<code>cli verify</code>)</td></tr>
+</table>
+<p class="muted">Out of scope, as in the brief: accounting beyond maintenance (Tally stays), CCTV and barriers, a marketplace.</p>
 
 <h2>2. Assumptions</h2>
 <p>Given by the brief: ₹6.50 per sq ft a month, late fees under the bye-laws, visitor photos deleted after 90 days, English, Marathi and Hindi, and mocked payments and messages. Where the brief is silent, I assumed the following. Each is a setting or a single function.</p>
@@ -203,7 +214,7 @@ flowchart TD
 <figure><img src="img/desk-matching.jpg" alt="" style="max-width:62%"><figcaption>A credit whose narration names T10-1707 while its UPI ID is registered to T09-1802. Two strong signals disagree, so it is queued with both flats and their evidence instead of being posted.</figcaption></figure>
 
 <h2>7. UI and design</h2>
-<p>The brief asks for minimal design and every action within two taps. Warm neutrals with one lilac accent for the next action; six soft tints only to tell categories, people and amenities apart; light and dark themes; loading, empty and error states from shared components. Small interactions carry meaning: the dues card opens into what makes up the amount, a tapped month in Bills shows its sum, a waiting visitor pulses on the timeline, and guest codes count down. Animations stop when the phone asks for reduced motion. The desk is denser, for a working day, and the committee report leads with the brief's three targets.</p>
+<p>The brief asks for minimal design and every action within two taps. Warm neutrals with one lilac accent for the next action; six soft tints only to tell categories, people and amenities apart; light and dark themes; loading, empty and error states from shared components. Small interactions carry meaning: the dues card opens into what makes up the amount, a tapped month in Bills shows its sum, a waiting visitor pulses on the timeline, and guest codes count down. Animations stop when the phone asks for reduced motion. The logo is a T made from a tower between two shorter ones; the front page (<code>/welcome</code>) is built with GSAP and loads on its own, so the app screens carry none of it. The desk is denser, for a working day, and the committee report leads with the brief's three targets.</p>
 <div class="two">
   <figure><img src="img/res-home.jpg" alt=""><figcaption>Resident home: dues first, with the overdue days and interest stated; complaints and visitors one tap away.</figcaption></figure>
   <figure><img src="img/gate.jpg" alt=""><figcaption>Gate tablet with the network down: very large buttons, a dark screen for night, "Offline · saved on tablet", language switch, and the DPDP notice to visitors.</figcaption></figure>

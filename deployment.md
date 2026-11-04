@@ -1,15 +1,71 @@
-# Township: deployment
+# Township: deployment and demo guide
 
-Repository: https://github.com/AmanSingh-tech/township
-Live app: https://township-91vm.onrender.com/welcome (Render free plan: the first visit after a quiet spell takes about a minute while the server wakes)
+| | |
+|---|---|
+| Live app | **https://township-91vm.onrender.com/welcome** (Render free plan: the first visit after a quiet spell takes about a minute while the server wakes) |
+| Repository | https://github.com/AmanSingh-tech/township |
+| Design | `docs/Township-TDD.pdf` (architecture, data model, flows, AI, UI, what was cut) |
+| Evaluation | `docs/evaluation.md` (how accurate the complaint AI and the bank matching are) |
 
-The app is deployed on Render from `render.yaml`, and also runs on any machine with Docker using one command. Both
-load the sample township on first start. The project uses no paid services. SMS, online payment and file storage are mocked, as the brief
-allows ("Mock payments, messages and outside systems"). Each mock is labelled on screen where people see it.
+The app runs on Render from `render.yaml`, and on any machine with Docker using one command. Both load the sample
+township on first start: the brief's three flats plus about 60 more, with residents, bills, payments, complaints,
+visitors, bookings and notices. No paid service is used. SMS, online payment and file storage are mocked, as the brief
+allows ("Mock payments, messages and outside systems"), and each mock is labelled on screen.
 
-## 1. Run locally with Docker (recommended)
+## 1. Five-minute tour of the core build
 
-You only need Docker with Compose v2.
+On the live app or a local run. Each step names the login to use (section 2).
+
+1. **Resident login and bills.** Sign in as Swati (`9822010002`). Home shows ₹13,004 due, 47 days overdue; tap
+   **What is in this** for the two unpaid months and the interest. Open **Bills**: tap a month in the chart, then a bill,
+   to see 980 sq ft × ₹6.50.
+2. **Test payment.** Tap **Pay now**, then **Complete test payment**. A numbered receipt appears under Bills →
+   Receipts, with a PDF. (**Decline** shows a failed payment.)
+3. **Complaint with AI.** Complaints → **Raise a complaint**: type "Smell of gas near the meter room" and submit. It is
+   escalated to the duty manager by the safety rule. Raise a plain one too ("Kitchen tap is dripping") and see the
+   category, urgency and assignee the app chose.
+4. **Help desk.** Sign in as the help desk (`9000000001`) in a private window. Open the complaint: change its category
+   in one tap, see the AI's confidence against the 60% line, then **Start work** and **Mark resolved**. Back as Swati,
+   rate the fix or reopen it.
+5. **Bank matching (the hard part).** Sign in as accounts (`9000000004`) → Bank matching → **download the sample
+   statement** → drop it back in. Confident credits post themselves; the rest wait with their evidence and suggested
+   flats. **Post here** on one; it then needs a second person: sign in as admin (`9000000005`) → Approvals → **Approve**.
+6. **Committee view.** Sign in as committee (`9000000002`) → Committee report: collections, dues ageing, complaint times
+   and the brief's three targets. **Sign off** freezes the month.
+
+## 2. Demo logins
+
+Enter the mobile number and press **Send code**. Because SMS is mocked, the 6-digit code appears on the sign-in screen:
+press **Fill it in**, then **Sign in**. The sign-in page also lists these accounts: tap one to sign in. In demo mode one
+number can request 15 codes an hour (3 in production).
+
+| Role | Mobile | What to try |
+|---|---|---|
+| Resident: **Swati Joshi** (tenant, T12-0408) | `9822010002` | The brief's flat that is 47 days overdue. Dues breakdown, bills chart, test payment, her water-leak complaint, a visitor waiting at the gate, guest codes, booking. |
+| Resident: **Aamir Shaikh** (owner, T21-1601) | `9822010003` | Paid ₹5,000 of ₹10,660, 18 days overdue (₹5,719 due with interest). Pay the rest and get a receipt. |
+| Resident: **Neeraj Kulkarni** (owner, T07-1203) | `9822010001` | Fully paid. His tower 7 lift complaint is linked to three other flats' reports. |
+| Help desk: Priya Patil | `9000000001` | Complaints queue: count tiles, category change, assignment, status, linked duplicates. |
+| Accounts: Meena Kulkarni | `9000000004` | Bank matching, flats and bills, bill runs, register import, Tally export. |
+| Committee: Rajan Gokhale | `9000000002` | Committee report; approve a bill run; sign off a month. |
+| Admin | `9000000005` | Approvals (second person), settings, staff, technicians, gate tablets, amenities, notices, messages, data requests, audit log. |
+| Guard (gate tablet) | `9000000003`, PIN `2468` | Needs a paired tablet, below. |
+
+**Gate tablet:** sign in as admin → Admin → Gate tablets → register a tablet and note the 8-digit pairing code. Open
+`/gate` in another browser or a private window and enter the code, then sign in as the guard with `9000000003` and PIN
+`2468`. Log a visitor for T12-0408, then approve it as Swati. Switch the browser offline to see entries saved on the
+tablet.
+
+**Two-person checks:** a manual bank post, a ledger adjustment or a change to a resident's login number, requested by one
+person, must be approved by another (for example accounts requests, admin approves).
+
+**Theme and language:** light and dark under Profile → Appearance (residents) or at the bottom of the desk sidebar
+(staff). English, Marathi and Hindi from the sign-in page or the profile.
+
+All names, numbers and UPI IDs in the sample data are invented. The three sample flats come from the brief.
+
+## 3. Run locally with Docker (recommended)
+
+You only need Docker.
 
 ```bash
 git clone https://github.com/AmanSingh-tech/township.git
@@ -23,9 +79,9 @@ applies the migrations and loads the sample township. The log ends with
 
 - Stop with Ctrl+C, or `docker compose down`. Data is kept in a Docker volume.
 - Start again from a clean sample township with `docker compose down -v && docker compose up --build`.
-- If port 4000 or 5440 is already in use, stop whatever holds it, or change the left-hand port in `docker-compose.yml`.
+- If port 4000 or 5440 is in use, change the left-hand port in `docker-compose.yml`.
 
-## 2. Run for development (Node)
+## 4. Run for development, tests and evaluation
 
 You need Node 20+ and Docker.
 
@@ -37,8 +93,6 @@ npm run dev:fixtures                                               # sample town
 npm run dev                                                        # API :4000, app with hot reload on http://localhost:5173
 ```
 
-Tests:
-
 ```bash
 npm test             # 53 server tests: billing, interest, matching, complaints, roles, security, evaluation floors
 npm run eval         # scores complaint triage and bank matching; writes docs/evaluation.md
@@ -46,43 +100,35 @@ npm run test:e2e     # 6 browser tests (needs Chrome; set CHROME_PATH if it is n
 npm run load:seed && npm run load:run      # optional: full-size load test, 2,400 flats
 ```
 
-## 3. How it is deployed
+## 5. How it is deployed
 
-There is one container: a Node 20 API, which also serves the built React web app. It runs alongside PostgreSQL 16.
+One container runs a Node 20 API that also serves the built React app, next to PostgreSQL 16.
 
-| Service | Where |
+| Part | Where |
 |---|---|
-| App | Docker image built from `Dockerfile`: a non-root user, and it refuses to start without its required settings |
-| Database | PostgreSQL 16 (the `db` service in `docker-compose.yml`). Migrations run on start. |
-| Photos | The server's disk (the `township-uploads` volume). Links are signed and expire after 15 minutes. |
-| SMS, payments | Mocked: the login code is shown on the sign-in screen, and payments go through a test gateway in which no money moves |
+| App | Docker image from `Dockerfile`: non-root user; it refuses to start without its required settings |
+| Database | PostgreSQL 16. Migrations run on start. |
+| Photos | The server's disk. Links are signed and expire after 15 minutes. |
+| SMS, payments | Mocked: the login code is shown on the sign-in screen; payments go through a test gateway in which no money moves |
 
-### Live deployment on Render
+**On Render (the live app).** `render.yaml` is a Blueprint: one web service built from the `Dockerfile` and one
+PostgreSQL 16 database, both on the free plan in Singapore, the nearest region to Pune.
 
-`render.yaml` is a Render Blueprint: one web service built from the `Dockerfile` and one PostgreSQL 16 database, both
-on the free plan in Singapore (the nearest region to Pune). To deploy a copy:
-
-1. On render.com: **New → Blueprint**, connect this GitHub repository, then **Apply**.
-2. Render creates the database, builds the image and starts the app. Migrations run, then the sample township loads.
-3. Every push to `main` redeploys.
+1. render.com → **New → Blueprint** → connect this repository → **Apply**.
+2. Render creates the database, builds the image and starts the app; the sample township loads.
+3. Every push to `main` redeploys. The database keeps its data across deploys.
 
 The Blueprint sets `PORT`, `DATABASE_URL` (from the database), `FILE_URL_SECRET` (generated by Render), `DEMO_DATA`,
-`TRUST_PROXY`, `STORAGE` and `STORAGE_DIR`. No paid service is configured, so the same mocks apply as locally.
-Free-plan limits: the server sleeps after 15 idle minutes, photos uploaded live are lost when it restarts (the disk is
-not persistent), and the free database expires after 30 days.
+`TRUST_PROXY`, `STORAGE` and `STORAGE_DIR`.
 
-A production setup on AWS Mumbai is written in Terraform in `infra/aws/`, with its own runbook. It is optional and costs
-money, so it is not applied. CI (`.github/workflows/ci.yml`) runs the tests, builds the image and checks the Terraform on
-every push.
+**Optional, not applied:** a production setup on AWS Mumbai in Terraform (`infra/aws/`, with its own runbook), about
+US$250–300 a month. CI (`.github/workflows/ci.yml`) runs the tests, builds the image and checks the Terraform on every
+push.
 
-### Environment variables (names only)
+## 6. Environment variables (names only)
 
-Required in production:
-
-- `DATABASE_URL`, or the separate `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and `PGDATABASE`
-- `FILE_URL_SECRET`
-
-Optional. Without them a labelled placeholder is used, or the feature is off:
+Required in production: `DATABASE_URL` (or `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`) and
+`FILE_URL_SECRET`. Everything else is optional; without it a labelled placeholder is used, or the feature is off.
 
 | Area | Variables |
 |---|---|
@@ -95,36 +141,25 @@ Optional. Without them a labelled placeholder is used, or the feature is off:
 | Complaint AI (Claude) | `ANTHROPIC_API_KEY`, `CLASSIFIER` |
 | Error reports (Sentry) | `SENTRY_DSN` |
 
-`.env.example` lists them all with comments. No secret is stored in the repository. `.env` is git-ignored. The only value
-committed in `docker-compose.yml` is a local-only `FILE_URL_SECRET` default, which you should replace for anything
-beyond a local run.
+`.env.example` lists them all with comments. No secret is stored in the repository and `.env` is git-ignored. The only
+value committed in `docker-compose.yml` is a local-only `FILE_URL_SECRET` default; replace it for anything beyond a
+local run.
 
-## 4. Demo logins for the reviewer
+## 7. If something goes wrong
 
-To sign in, enter the mobile number and press **Send code**. Because SMS is mocked, the 6-digit code appears on the sign-in
-screen: press **Fill it in**, then **Verify**. In demo mode one number can request 15 codes an hour (3 in production).
+| What you see | What to do |
+|---|---|
+| The live app takes a minute, or shows 502, on the first visit | The free server was asleep. Wait 30–60 seconds and refresh. |
+| An old logo or page after a deploy | Refresh once; the logo has a versioned address and the service worker drops old copies. |
+| No demo list on the sign-in page | `DEMO_DATA` is not `true`, or the database was not empty on first start. Run `docker compose down -v` and start again. |
+| "Too many codes" when signing in | Each number can request 15 codes an hour in demo mode; use another demo login or wait. |
+| The gate asks for a pairing code | Pair the tablet first, as in section 2. |
 
-| Role | Mobile | What to try |
-|---|---|---|
-| Resident: **Swati Joshi** (tenant, T12-0408) | `9822010002` | The brief's flat that is 47 days overdue. Home, Bills, Pay now (test gateway), her open water-leak complaint. |
-| Resident: **Aamir Shaikh** (owner, T21-1601) | `9822010003` | Paid ₹5,000 of ₹10,660, 18 days overdue. Pay the rest, get a receipt (and its PDF), raise a complaint. |
-| Resident: **Neeraj Kulkarni** (owner, T07-1203) | `9822010001` | Fully paid. His complaint about the tower 7 lift is linked to three other flats' reports. |
-| Help desk | `9000000001` | The complaints queue: change a category in one tap, assign, update status. |
-| Accounts | `9000000004` | Bank matching: use **download the sample statement**, drop it back in, and review the queue. |
-| Committee | `9000000002` | The committee report: collections, dues ageing, complaint times. Sign off a month. |
-| Admin | `9000000005` | Settings, staff, gate tablets, amenities, audit log. |
-| Guard (gate tablet) | `9000000003`, PIN `2468` | See below |
+## 8. Limits of the demo
 
-**Two-person checks:** a manual bank posting or ledger adjustment requested by accounts must be approved by a different
-person, for example by the admin.
-
-**Gate tablet:**
-1. Sign in as admin and go to Admin → Gate tablets → register a tablet. Note the 8-digit pairing code.
-2. Open http://localhost:4000/gate in another browser or a private window, and enter the code.
-3. Sign in as the guard with `9000000003` and PIN `2468`.
-4. Log a visitor for T12-0408, then approve it as Swati.
-
-**Theme:** light and dark are under Profile → Appearance for residents, and at the bottom of the desk sidebar for
-staff.
-
-All names, numbers and UPI IDs in the sample data are invented. The three sample flats come from the brief.
+- The live app is on Render's free plan: it sleeps after 15 idle minutes, photos uploaded there are lost when it
+  restarts, and the free database expires after 30 days.
+- Payments, SMS and WhatsApp are not real. Payments and SMS follow the real providers' steps behind a labelled
+  placeholder; WhatsApp is not built.
+- Without an `ANTHROPIC_API_KEY` the complaint AI is the built-in keyword model (81% category accuracy in
+  `docs/evaluation.md`); anything it is unsure of is flagged for the help desk.
