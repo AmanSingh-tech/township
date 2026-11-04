@@ -55,7 +55,9 @@ r.get('/home', resident, h(async (req, res) => {
   const next = st.bills.find((b) => b.unpaid > 0);
   res.json({
     flat,
-    dues: { totalDue: st.totalDue, interest: st.accruedInterest, daysOverdue: st.daysOverdue, dueOn: next?.due_on || null, advance: st.advance },
+    dues: { totalDue: st.totalDue, interest: st.accruedInterest, daysOverdue: st.daysOverdue, dueOn: next?.due_on || null, advance: st.advance,
+      // What makes up the amount due, oldest first, for the breakdown on the home screen.
+      unpaid: st.bills.filter((b) => b.unpaid > 0).map((b) => ({ label: b.label, unpaid: b.unpaid, overdueDays: b.overdueDays })) },
     complaints: complaints.filter((c) => c.status !== 'closed').map(complaintSummary),
     visitors, notices,
   });

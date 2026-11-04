@@ -98,11 +98,12 @@ test('resident books the tennis court; the fee is added to dues', async () => {
   const aamir = await open('aamir', phone);
   const before = (await one("SELECT COALESCE(SUM(debit - credit), 0) n FROM ledger WHERE flat_id = 'T21-1601'")).n;
   await aamir.goto(base + '/book');
-  await aamir.click('.chip:has-text("Tennis court")');
-  const days = aamir.locator('.row .chip');
+  await aamir.click('.amen:has-text("Tennis court")');
+  const days = aamir.locator('.day');
   await days.nth(2).click();
-  await aamir.locator('button.chip:not([disabled])', { hasText: '07:00' }).click();
-  await aamir.click('button:has-text("Book 07:00")');
+  await aamir.locator('button.slot:not([disabled])', { hasText: '07:00' }).click();
+  await aamir.getByText('07:00–08:00').waitFor();
+  await aamir.click('.book-bar button');
   await aamir.getByText('Your bookings').waitFor();
   await aamir.locator('.list-item', { hasText: 'Tennis court' }).waitFor();
   const afterBal = (await one("SELECT COALESCE(SUM(debit - credit), 0) n FROM ledger WHERE flat_id = 'T21-1601'")).n;

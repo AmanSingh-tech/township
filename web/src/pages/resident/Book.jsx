@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../api.js';
 import { useT } from '../../i18n.jsx';
 import { inr, date } from '../../format.js';
-import { useApi, Skeleton, Empty, useToast } from '../../ui.jsx';
+import { useApi, Skeleton, Empty, useToast, Icon } from '../../ui.jsx';
+import { TINTS } from './parts.jsx';
 
 const istToday = () => new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10);
 const plusDays = (d, n) => { const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
@@ -58,48 +59,62 @@ export default function Book() {
   const upcoming = (mine || []).filter((b) => b.status === 'confirmed' && b.on_date >= istToday());
 
   return (
-    <div className="stack-lg">
-      <div className="chips">
-        {amenities.map((a) => <button key={a.id} className={`chip ${amenity.id === a.id ? 'on' : ''}`} onClick={() => setAid(a.id)}>{a.name}</button>)}
+    <div className="stack-lg book">
+      <div className="amen-scroll" role="tablist" aria-label="Amenities">
+        {amenities.map((a, i) => (
+          <button key={a.id} role="tab" aria-selected={amenity.id === a.id} className={`amen tint-${TINTS[i % TINTS.length]} ${amenity.id === a.id ? 'on' : ''}`} onClick={() => setAid(a.id)}>
+            <span className="amen-name">{a.name}</span>
+            <span className="amen-fee num">{a.fee ? `${inr(a.fee)} ${t('perSlot')}` : t('free')}</span>
+          </button>
+        ))}
       </div>
-      <section className="card stack" style={{ gap: 10 }}>
-        <div className="row between">
-          <div><div style={{ fontWeight: 600 }}>{amenity.name}</div><div className="faint tiny">{amenity.description}</div></div>
-          <div className="right"><div className="num" style={{ fontWeight: 600 }}>{amenity.fee ? inr(amenity.fee) : t('free')}</div>{amenity.fee > 0 && <div className="faint tiny">{t('perSlot')}</div>}</div>
-        </div>
+
+      <section className="card stack" style={{ gap: 8 }}>
+        <div style={{ fontWeight: 600 }}>{amenity.name}</div>
+        {amenity.description && <div className="faint small">{amenity.description}</div>}
         {amenity.rules && <p className="muted small">{amenity.rules}</p>}
         {amenity.fee > 0 && <p className="faint tiny">{t('chargedToBill')} · {t('freeCancel', { h: amenity.cancel_hours })}</p>}
       </section>
 
-      <div className="row" style={{ gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+      <div className="day-scroll" role="tablist" aria-label={t('forDate')}>
         {days.map((d) => (
-          <button key={d} className={`chip ${d === day ? 'on' : ''}`} style={{ flex: 'none', height: 52, display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.2 }} onClick={() => setDay(d)}>
+          <button key={d} role="tab" aria-selected={d === day} className={`day ${d === day ? 'on' : ''}`} onClick={() => setDay(d)}>
             <span className="tiny">{new Date(d + 'T00:00:00Z').toLocaleDateString('en-IN', { weekday: 'short', timeZone: 'UTC' })}</span>
-            <span>{Number(d.slice(8))}</span>
+            <b>{Number(d.slice(8))}</b>
           </button>
         ))}
       </div>
 
       {!avail ? <Skeleton h={160} /> : avail.closed ? <div className="notice warn">{t('closed')}: {avail.closed}</div>
         : avail.slots.every((s) => s.past) ? <p className="empty">{t('noSlotsLeft')}</p> : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: 8 }}>
-          {/* Slots that have already started today are left out. */}
+        <div className="slots">
+          {/* Slots that have already started today are left out. A picked run is joined into one block. */}
           {avail.slots.map((s, i) => {
             if (s.past) return null;
-            const full = s.left === 0;
+            const full = s.left === 0, on = pick.includes(i);
+            const cap = amenity.capacity || 1;
             return (
-              <button key={s.start} disabled={full} onClick={() => toggle(i)} className={`chip ${pick.includes(i) ? 'on' : ''}`}
-                style={{ height: 52, borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', justifyContent: 'center', lineHeight: 1.2 }}>
-                <span>{s.start}</span><span className="tiny" style={{ opacity: 0.7 }}>{full ? t('full') : t('slotsLeft', { n: s.left })}</span>
+              <button key={s.start} disabled={full} onClick={() => toggle(i)} aria-pressed={on}
+                className={`slot ${on ? 'on' : ''} ${on && pick.includes(i - 1) ? 'join-l' : ''} ${on && pick.includes(i + 1) ? 'join-r' : ''}`}>
+                <span className="slot-t">{s.start}</span>
+                <span className="slot-l">{full ? t('full') : t('slotsLeft', { n: s.left })}</span>
+                <span className="slot-bar" aria-hidden="true"><i style={{ width: `${(s.left / cap) * 100}%` }} /></span>
               </button>
             );
           })}
         </div>
       )}
+
       {pick.length > 0 && (
-        <button className="btn primary lg block" disabled={busy} onClick={confirm}>
-          {t('confirmBooking')} {avail.slots[Math.min(...pick)].start}–{avail.slots[Math.max(...pick)].end}{amenity.fee ? ` · ${inr(amenity.fee * pick.length)}` : ''}
-        </button>
+        <div className="book-bar">
+          <div className="grow">
+            <b>{amenity.name}</b>
+            <div className="tiny">{date(day, { weekday: 'short', day: 'numeric', month: 'short' })} · {avail.slots[Math.min(...pick)].start}–{avail.slots[Math.max(...pick)].end}</div>
+          </div>
+          <button className="btn primary" disabled={busy} onClick={confirm}>
+            <Icon name="check" size={16} />{t('confirmBooking')}{amenity.fee ? ` · ${inr(amenity.fee * pick.length)}` : ''}
+          </button>
+        </div>
       )}
 
       <section>
@@ -107,7 +122,8 @@ export default function Book() {
         <div className="card flush list">
           {upcoming.length ? upcoming.map((b) => (
             <div key={b.id} className="list-item">
-              <div className="grow"><div style={{ fontWeight: 500 }}>{b.amenity}</div><div className="faint tiny">{date(b.on_date, { weekday: 'short', day: 'numeric', month: 'short' })} · {t5(b.start_time)}–{t5(b.end_time)}{b.fee ? ` · ${inr(b.fee)}` : ''}</div></div>
+              <span className="bk-date" aria-hidden="true"><b>{Number(String(b.on_date).slice(8, 10))}</b><span>{date(b.on_date, { month: 'short' })}</span></span>
+              <div className="grow"><div style={{ fontWeight: 500 }}>{b.amenity}</div><div className="faint tiny">{date(b.on_date, { weekday: 'short' })} · {t5(b.start_time)}–{t5(b.end_time)}{b.fee ? ` · ${inr(b.fee)}` : ''}</div></div>
               <button className="btn sm ghost danger" onClick={() => cancelIt(b)}>{t('cancelBooking')}</button>
             </div>
           )) : <Empty>{t('noBookings')}</Empty>}
