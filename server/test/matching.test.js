@@ -51,3 +51,21 @@ test('statement: every case lands where it should', async () => {
   assert.ok(res.some((r) => r.status === 'reconciled' && /\/(T\d\d-\d{4})$/.test(r.narration)), 'credit with an in-app payment UTR is reconciled');
   assert.ok((await flatStatus('T21-1601')).totalDue < before, 'posting reduced Aamir’s dues');
 });
+
+test('matching time: the committee report and the evaluation share one model', async () => {
+  const { matchingTime, MINUTES } = await import('../lib/matchtime.js');
+  const r = matchingTime([
+    { status: 'posted', flatId: 'T07-1203', topSuggestion: 'T07-1203' },        // posted by the app: 0 min
+    { status: 'reconciled', flatId: 'T21-1601', topSuggestion: null },          // online payment already recorded: 0
+    { status: 'resolved', flatId: 'T12-0408', topSuggestion: 'T12-0408' },      // a person confirmed the right suggestion: 0.5
+    { status: 'resolved', flatId: 'T12-0408', topSuggestion: 'T21-1601' },      // the suggestion was wrong: 2
+    { status: 'queue', flatId: null, topSuggestion: 'T07-1203' },               // still waiting: counted as the worst case, 2
+    { status: 'duplicate', flatId: null, topSuggestion: null },                 // not a credit to match
+    { status: 'ignored', flatId: null, topSuggestion: null },                   // not maintenance
+  ]);
+  assert.equal(MINUTES.manual, 2);
+  assert.equal(r.credits, 5);
+  assert.deepEqual(r.minutes, { manual: 10, withApp: 4.5 });
+  assert.equal(r.share, 0.45);
+  assert.equal(r.autoRate, 0.4);
+});

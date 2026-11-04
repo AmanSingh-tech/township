@@ -104,12 +104,13 @@ export default function Report() {
       </div>
 
       <section className="card stack">
-        <div className="row between wrap"><h2>Against the brief's targets</h2><span className="faint tiny">Where the society started, where it is now, and the six-month goal</span></div>
+        <div className="row between wrap"><h2>Against the brief's targets</h2><span className="faint tiny">The brief&rsquo;s three success measures: where the society started, where it is now, and the six-month target</span></div>
         <div className="goals">
           <Goal label="On-time payments" from={0.7} now={cur.onTimeRate} target={0.9} note="Bills fully paid by their due date." />
-          <Goal label="Credits matched automatically" from={0} now={r.matching.totalCredits ? r.matching.autoRate : null} target={0.5} note="The brief asks for 80% less matching time; on test statements the app saves 88% (docs/evaluation.md)." />
+          <Goal label="Payment matching time" from={1} now={r.matching.timeShare} target={0.2} lower note={r.matching.minutesByHand ? `About ${Math.round(r.matching.minutesWithApp)} of ${r.matching.minutesByHand} minutes it would take by hand (2 min a credit; same model as the evaluation).` : 'Appears once a bank statement is imported.'} />
           <Goal label="Reopened complaints" from={0.25} now={c.reopenRate} target={0.08} lower note="Complaints reopened by residents after a fix." />
         </div>
+        {r.matching.totalCredits > 0 && <p className="faint small">Operational, not a target: {pct(r.matching.autoRate)} of {r.matching.totalCredits} bank credits were posted without a person; the rest waited for review.</p>}
       </section>
 
       <div className="grid-2">

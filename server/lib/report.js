@@ -56,6 +56,8 @@ export async function committeeReport(period, { fresh = false } = {}) {
   const unidentified = sumOf(['queue', 'pending_approval']);
   const credits = sumOf(['posted', 'queue', 'pending_approval', 'resolved', 'reconciled']);
   const auto = sumOf(['posted', 'reconciled']);
+  // The brief's measure: matching time against by hand, same model as the evaluation.
+  const time = matchingTime(await many(`SELECT status, flat_id AS "flatId", candidates->0->>'flatId' AS "topSuggestion" FROM bank_rows`));
 
   const since = new Date(Date.now() - 30 * 86400000);
   const cs = await many('SELECT * FROM complaints WHERE created_at >= $1', [since]);
@@ -74,7 +76,8 @@ export async function committeeReport(period, { fresh = false } = {}) {
     interestAccrued: [...statuses.values()].reduce((s, x) => s + x.accruedInterest, 0),
     ageing: buckets.map(({ key, label, amount, flats: f }) => ({ key, label, amount, flats: f.size })),
     defaulters,
-    matching: { queueCount: unidentified.n, queueAmount: unidentified.amount, autoRate: credits.n ? auto.n / credits.n : null, totalCredits: credits.n },
+    matching: { queueCount: unidentified.n, queueAmount: unidentified.amount, autoRate: credits.n ? auto.n / credits.n : null, totalCredits: credits.n,
+      timeShare: time.share, minutesWithApp: time.minutes.withApp, minutesByHand: time.minutes.manual },
     pendingApprovals: await val("SELECT COUNT(*) FROM approvals WHERE status = 'pending'"),
     complaints: {
       windowDays: 30, raised: cs.length,
@@ -126,6 +129,7 @@ import crypto from 'node:crypto';
 import { one as oneRow, many as manyRows, tx } from '../db.js';
 import { audit } from './audit.js';
 import { HttpError } from './util.js';
+import { matchingTime } from './matchtime.js';
 
 const canonical = (v) => (Array.isArray(v) ? `[${v.map(canonical).join(',')}]`
   : v && typeof v === 'object' ? `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonical(v[k])}`).join(',')}}`

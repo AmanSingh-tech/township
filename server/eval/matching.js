@@ -8,14 +8,14 @@ import { flatStatus } from '../lib/billing.js';
 import { recordPayment } from '../lib/billing.js';
 import { matchStatement } from '../lib/matcher.js';
 import { readBankStatement } from '../lib/csv.js';
+import { MINUTES, matchingTime } from '../lib/matchtime.js';
 
 // Assumed share of each style in a month's credits (labelled in the TDD).
 export const MIX = [
   ['upi-registered', 0.33], ['upi-registered+flat', 0.12], ['neft-flat', 0.15], ['family-unregistered', 0.10],
   ['imps-name-only', 0.08], ['part-payment', 0.07], ['typo-flat', 0.05], ['pays-for-neighbour', 0.05], ['advance-12-months', 0.05],
 ];
-// Minutes a person spends per credit (assumptions, labelled in the TDD).
-export const MINUTES = { manual: 2, reviewWithRightSuggestion: 0.5, reviewWithout: 2, autoPosted: 0 };
+export { MINUTES };
 
 function rng(seed) {
   let a = seed >>> 0;
@@ -91,6 +91,7 @@ const pct = (n, d) => (d ? Math.round((n / d) * 1000) / 10 : 0);
 export async function evaluateMatching({ seeds = [1, 2, 3, 4, 5] } = {}) {
   const dir = await directory();
   const tally = { credits: 0, auto: 0, wrongAuto: [], queued: 0, rightTop: 0, rightTop3: 0, notMaint: 0, notMaintPosted: [], misrouted: 0, byStyle: {} };
+  const timed = []; // each maintenance credit as the report would see it, once a person has decided it
   for (const seed of seeds) {
     const { rows, csv } = buildStatement(dir, seed);
     let res;
@@ -112,6 +113,8 @@ export async function evaluateMatching({ seeds = [1, 2, 3, 4, 5] } = {}) {
         return;
       }
       tally.credits++;
+      // A queued credit is decided to its true flat, as the person reviewing it would.
+      timed.push({ status: got.status === 'queue' ? 'resolved' : got.status, flatId: got.status === 'queue' ? x.truth : got.flatId, topSuggestion: got.candidates?.[0]?.flatId });
       if (got.status === 'posted') {
         tally.auto++; st.auto++;
         if (got.flatId !== x.truth) { tally.wrongAuto.push({ narration: x.narration, truth: x.truth, posted: got.flatId }); st.wrong++; }
@@ -122,15 +125,14 @@ export async function evaluateMatching({ seeds = [1, 2, 3, 4, 5] } = {}) {
       } else tally.misrouted++;
     });
   }
-  const M = MINUTES;
-  const manual = tally.credits * M.manual;
-  const withApp = tally.auto * M.autoPosted + tally.rightTop * M.reviewWithRightSuggestion + (tally.queued - tally.rightTop + tally.misrouted) * M.reviewWithout;
+  const time = matchingTime(timed);
+  const manual = time.minutes.manual, withApp = time.minutes.withApp;
   return {
     statements: seeds.length, credits: tally.credits, notMaintenance: tally.notMaint,
     autoPosted: pct(tally.auto, tally.credits), wrongAutoPosts: tally.wrongAuto.length, wrongAutoExamples: tally.wrongAuto.slice(0, 5),
     queued: pct(tally.queued, tally.credits), queuedTopSuggestionRight: pct(tally.rightTop, tally.queued), queuedRightInTop3: pct(tally.rightTop3, tally.queued),
     notMaintenancePosted: tally.notMaintPosted.length, misrouted: tally.misrouted,
-    minutes: { manual, withApp, saved: pct(manual - withApp, manual) },
+    minutes: { manual, withApp, saved: pct(manual - withApp, manual), share: pct(withApp, manual) },
     byStyle: tally.byStyle,
   };
 }
