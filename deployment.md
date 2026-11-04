@@ -12,9 +12,24 @@ township on first start: the brief's three flats plus about 60 more, with reside
 visitors, bookings and notices. No paid service is used. SMS, online payment and file storage are mocked, as the brief
 allows ("Mock payments, messages and outside systems"), and each mock is labelled on screen.
 
+## 0. Quickest way to review: use the live site
+
+Nothing to install. Open **https://township-91vm.onrender.com/welcome** in any browser, on a phone or a computer.
+
+1. The front page explains the product. Press **Sign in** (top right).
+2. The sign-in page lists every demo account: tap one (for example **Swati Joshi**, a resident).
+3. The 6-digit code appears on screen, because SMS is mocked: press **Fill it in**, then **Sign in**.
+4. Follow the tour in section 1. To switch roles, sign out (resident: Profile; staff: bottom of the sidebar) or use a
+   private window for the second role, for example the help desk next to a resident.
+5. Optional: install it with **Download app** in the top bar, so it opens like an app with its own icon.
+
+The live site is on Render's free plan. A scheduled ping keeps it awake, but if it was asleep, the first visit takes up
+to a minute; refresh once. Data changed by one reviewer is visible to the next, because it is one shared demo township.
+To start from a clean township, run it locally (section 3).
+
 ## 1. Five-minute tour of the core build
 
-On the live app or a local run. Each step names the login to use (section 2).
+On the live site or a local run. Each step names the login to use (section 2); each covers part of the brief's core build.
 
 1. **Resident login and bills.** Sign in as Swati (`9822010002`). Home shows about ₹13,000 due, 47 days overdue on the day the demo data loaded (interest adds a
    few rupees and the overdue count a day for every day since); tap
