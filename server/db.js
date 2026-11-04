@@ -58,28 +58,37 @@ export async function pendingMigrations() {
 }
 
 // Applies migrations/NNN_name.sql in order, once each, under an advisory lock
-// so two app instances starting together cannot both migrate.
+// so two app instances starting together cannot both migrate. Inside tx() it
+// joins that transaction (each file under a savepoint), so a caller such as the
+// demo reset can rebuild the schema and have it all undone if anything fails.
 export async function migrate() {
-  const client = await pool.connect();
+  const shared = als.getStore();
+  const client = shared || await pool.connect();
+  const [begin, commit, rollback] = shared
+    ? ['SAVEPOINT migration', 'RELEASE SAVEPOINT migration', 'ROLLBACK TO SAVEPOINT migration']
+    : ['BEGIN', 'COMMIT', 'ROLLBACK'];
   try {
-    await client.query('SELECT pg_advisory_lock(4242)');
+    // In a transaction the lock is released when it ends, even on a rollback.
+    await client.query(shared ? 'SELECT pg_advisory_xact_lock(4242)' : 'SELECT pg_advisory_lock(4242)');
     await client.query('CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
     const done = new Set((await client.query('SELECT name FROM schema_migrations')).rows.map((r) => r.name));
     for (const file of migrationFiles()) {
       if (done.has(file)) continue;
-      await client.query('BEGIN');
+      await client.query(begin);
       try {
         await client.query(fs.readFileSync(path.join(dir, file), 'utf8'));
         await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [file]);
-        await client.query('COMMIT');
+        await client.query(commit);
         if (env.NODE_ENV !== 'test') console.log(`Applied migration ${file}`);
       } catch (err) {
-        await client.query('ROLLBACK');
+        await client.query(rollback);
         throw new Error(`Migration ${file} failed: ${err.message}`);
       }
     }
   } finally {
-    await client.query('SELECT pg_advisory_unlock(4242)').catch(() => {});
-    client.release();
+    if (!shared) {
+      await client.query('SELECT pg_advisory_unlock(4242)').catch(() => {});
+      client.release();
+    }
   }
 }

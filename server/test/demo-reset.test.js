@@ -9,6 +9,8 @@ const { testOtps } = await import('../lib/auth.js');
 const { env } = await import('../env.js');
 const { one, many } = await import('../db.js');
 const { flatStatus, recordPayment } = await import('../lib/billing.js');
+const { resetDemo } = await import('../lib/demoReset.js');
+const { loadFixtures } = await import('../demo/fixtures.js');
 
 let server, base;
 before(() => { server = createApp().listen(0); base = `http://127.0.0.1:${server.address().port}/api`; });
@@ -62,6 +64,36 @@ test('the audit trail of resets survives each reset', async () => {
   const resets = await many("SELECT user_name, details FROM audit_log WHERE action = 'demo.reset' ORDER BY id");
   assert.equal(resets.length, 2, 'the reset in the previous test is still recorded, with this one');
   assert.ok(resets.every((x) => x.user_name && x.details.role === 'admin'), 'each says who reset it');
+});
+
+test('a reset that fails part-way changes nothing, is recorded, and lifts the pause', async () => {
+  // A change made since the last reset; a failed reset must leave it in place.
+  await recordPayment({ flatId: 'T21-1601', amount: 1000, paidOn: '2026-11-02', method: 'bank', reference: 'KEPT', postedBy: 'test' }, { name: 'test' });
+  const before = await one('SELECT (SELECT COUNT(*) FROM payments)::int payments, (SELECT COUNT(*) FROM flats)::int flats, (SELECT COUNT(*) FROM audit_log)::int audit');
+  const due = (await flatStatus('T21-1601')).totalDue;
+
+  // The schema is dropped and rebuilt with the sample data, then a step fails.
+  const failing = async () => { await loadFixtures(); throw new Error('disk full (simulated)'); };
+  await assert.rejects(resetDemo({ name: 'Admin', role: 'admin', phone: ACCOUNTS.admin }, {}, { load: failing }),
+    (e) => e.status === 500 && /nothing was changed/.test(e.message));
+
+  const now = await one('SELECT (SELECT COUNT(*) FROM payments)::int payments, (SELECT COUNT(*) FROM flats)::int flats, (SELECT COUNT(*) FROM audit_log)::int audit');
+  assert.equal(now.payments, before.payments, 'every payment is still there');
+  assert.equal(now.flats, before.flats);
+  assert.equal((await one("SELECT COUNT(*)::int n FROM payments WHERE reference = 'KEPT'")).n, 1, 'the change made before the reset survives');
+  assert.equal((await flatStatus('T21-1601')).totalDue, due);
+  assert.equal((await many("SELECT 1 FROM audit_log WHERE action = 'demo.reset'")).length, 2, 'earlier resets are still recorded');
+  const failed = await many("SELECT user_name, details FROM audit_log WHERE action = 'demo.reset_failed'");
+  assert.equal(failed.length, 1, 'the failure is recorded');
+  assert.match(failed[0].details.error, /disk full/);
+  assert.equal(now.audit, before.audit + 1, 'and nothing else changed in the audit log');
+
+  // The pause is lifted: people can use the app, and the next reset works and keeps the record.
+  const resident = await login(ACCOUNTS.swati);
+  assert.equal((await call('/home', { token: resident })).status, 200);
+  assert.equal((await call('/admin/demo/reset', { token: await login(ACCOUNTS.admin), body: {} })).status, 200);
+  assert.equal((await many("SELECT 1 FROM audit_log WHERE action = 'demo.reset_failed'")).length, 1, 'a later reset keeps the failure on record');
+  assert.equal((await one("SELECT COUNT(*)::int n FROM payments WHERE reference = 'KEPT'")).n, 0, 'and that reset does restore the sample data');
 });
 
 test('while a reset runs, other requests are told to wait and a second reset is refused', async () => {
