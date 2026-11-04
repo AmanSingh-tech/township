@@ -4,8 +4,8 @@
   "description": "Pay maintenance, raise complaints and approve visitors.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fafafa",
-  "theme_color": "#fafafa",
+  "background_color": "#fafaf8",
+  "theme_color": "#fafaf8",
   "icons": [
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]

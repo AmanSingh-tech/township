@@ -33,9 +33,9 @@ export default function Hero({ cta }) {
   return (
     <section className="lp-hero" ref={ref}>
       <div className="lp-hero-sky" data-speed="-0.3" aria-hidden="true" />
-      <Skyline seed={7} color="#141d38" windows="rgba(150,180,255,0.18)" minH={0.45} maxH={0.95} speed="-0.24" className="far" />
-      <Skyline seed={21} color="#0f1630" windows="rgba(255,206,140,0.32)" minH={0.25} maxH={0.7} density={1.2} speed="-0.12" className="mid" />
-      <Skyline seed={40} color="#0b1022" windows="rgba(255,196,120,0.4)" minH={0.12} maxH={0.34} density={1.4} speed="0.08" className="near" />
+      <Skyline seed={7} color="#1d1420" windows="rgba(231,175,231,0.16)" minH={0.45} maxH={0.95} speed="-0.24" className="far" />
+      <Skyline seed={21} color="#171019" windows="rgba(255,206,140,0.32)" minH={0.25} maxH={0.7} density={1.2} speed="-0.12" className="mid" />
+      <Skyline seed={40} color="#110c12" windows="rgba(255,196,120,0.4)" minH={0.12} maxH={0.34} density={1.4} speed="0.08" className="near" />
       <div className="lp-hero-device">
         <div className="lp-hero-glow" aria-hidden="true" />
         <Phone className="lp-hero-phone"><HomeScreen /></Phone>

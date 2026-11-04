@@ -5,10 +5,10 @@ import { Phone } from '../components/Devices.jsx';
 import { PayScreen, FixScreen, VisitorScreen, BookScreen } from '../components/screens.jsx';
 
 const STEPS = [
-  { tab: 'Pay', title: 'Dues, paid\nbefore dinner.', body: 'See exactly what is owed and why, pay by UPI or card, and keep every receipt in one place. Interest is shown, never hidden.', Screen: PayScreen, glow: '#2f6feb' },
-  { tab: 'Fix', title: 'Report it once.\nWatch it get fixed.', body: 'Snap the leak. It goes to the right technician for your tower, you follow every step, then rate the fix or reopen it.', Screen: FixScreen, glow: '#e0901a' },
-  { tab: 'Visitors', title: 'Know who is\nat the gate.', body: 'Approve or turn away a visitor from wherever you are, or send a guest a code before they arrive.', Screen: VisitorScreen, glow: '#16a37a' },
-  { tab: 'Book', title: 'The clubhouse,\nwithout the calls.', body: 'Pick a slot, see the fee and the cancellation cut-off, and it is added to your maintenance bill.', Screen: BookScreen, glow: '#8a5cf0' },
+  { tab: 'Pay', title: 'Dues, paid\nbefore dinner.', body: 'See exactly what is owed and why, pay by UPI or card, and keep every receipt in one place. Interest is shown, never hidden.', Screen: PayScreen, glow: '#d9a3e0' },
+  { tab: 'Fix', title: 'Report it once.\nWatch it get fixed.', body: 'Snap the leak. It goes to the right technician for your tower, you follow every step, then rate the fix or reopen it.', Screen: FixScreen, glow: '#e6b07c' },
+  { tab: 'Visitors', title: 'Know who is\nat the gate.', body: 'Approve or turn away a visitor from wherever you are, or send a guest a code before they arrive.', Screen: VisitorScreen, glow: '#b9c7a3' },
+  { tab: 'Book', title: 'The clubhouse,\nwithout the calls.', body: 'Pick a slot, see the fee and the cancellation cut-off, and it is added to your maintenance bill.', Screen: BookScreen, glow: '#c7a6ee' },
 ];
 
 const Lines = ({ text }) => text.split('\n').map((l, i) => <span key={i} className="lp-line">{l}</span>);

@@ -34,7 +34,7 @@ export default function Gate() {
         <i style={{ left: '78%', top: '18%' }} data-speed="-0.1" />
         <i style={{ left: '58%', top: '62%' }} data-speed="0.2" />
       </div>
-      <Skyline seed={88} color="#0c1530" windows="rgba(255,206,140,0.22)" minH={0.2} maxH={0.6} speed="-0.15" className="gate-far" />
+      <Skyline seed={88} color="#160e18" windows="rgba(255,206,140,0.22)" minH={0.2} maxH={0.6} speed="-0.15" className="gate-far" />
       <div className="lp-wrap lp-gate-copy">
         <p className="lp-eyebrow">At the gate</p>
         <SplitWords as="h2" className="lp-h" text="The gate never waits for the network." />

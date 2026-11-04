@@ -10,7 +10,7 @@
 
 const W = 300, H = 620, DEPTH = 24, R = 46, FOCAL = 1500;
 export const SEQ_WIDTH = 420, SEQ_HEIGHT = 700;
-const INK = '#14161b', COBALT = '#2f6feb', NAVY = '#1a3a94';
+const INK = '#14161b', COBALT = '#7b3f80', NAVY = '#2a1029';
 
 function canvas(w, h) {
   const c = document.createElement('canvas');
@@ -31,9 +31,9 @@ function frontTexture(s) {
 
   ctx.save();
   rr(ctx, 10, 10, W - 20, H - 20, R - 10); ctx.clip();
-  ctx.fillStyle = '#f3f4f7'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#f5f3ef'; ctx.fillRect(0, 0, W, H);
   const head = ctx.createLinearGradient(0, 0, W, 290);
-  head.addColorStop(0, '#13245a'); head.addColorStop(1, COBALT);
+  head.addColorStop(0, '#2b1430'); head.addColorStop(1, COBALT);
   ctx.fillStyle = head; ctx.fillRect(0, 0, W, 292);
   const sheen = ctx.createRadialGradient(W * 0.8, 40, 10, W * 0.8, 40, 220);
   sheen.addColorStop(0, 'rgba(255,255,255,0.28)'); sheen.addColorStop(1, 'rgba(255,255,255,0)');
@@ -52,7 +52,7 @@ function frontTexture(s) {
   text(ctx, 'Maintenance due', 40, 182, '500 11.5px Inter', 'rgba(255,255,255,0.78)');
   text(ctx, '₹4,820', 40, 222, '700 34px Inter', '#fff');
   text(ctx, 'Due 10 Nov', 40, 248, '500 11px Inter', 'rgba(255,255,255,0.7)');
-  rr(ctx, W - 124, 218, 84, 34, 17); ctx.fillStyle = '#fff'; ctx.fill();
+  rr(ctx, W - 124, 218, 84, 34, 17); ctx.fillStyle = '#ecd2f3'; ctx.fill();
   text(ctx, 'Pay now', W - 82, 240, '600 12.5px Inter', NAVY, 'center');
 
   const labels = ['Pay', 'Fix', 'Visitors', 'Book'];
@@ -60,8 +60,8 @@ function frontTexture(s) {
   labels.forEach((l, i) => {
     const x = 24 + i * (tw + 10);
     rr(ctx, x, 306, tw, 66, 14); ctx.fillStyle = '#fff'; ctx.fill();
-    ctx.strokeStyle = '#e4e6ec'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(x + tw / 2, 330, 12, 0, Math.PI * 2); ctx.fillStyle = 'rgba(47,111,235,0.12)'; ctx.fill();
+    ctx.strokeStyle = '#e8e5de'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(x + tw / 2, 330, 12, 0, Math.PI * 2); ctx.fillStyle = 'rgba(123,63,128,0.12)'; ctx.fill();
     ctx.beginPath(); ctx.arc(x + tw / 2, 330, 4.5, 0, Math.PI * 2); ctx.fillStyle = COBALT; ctx.fill();
     text(ctx, l, x + tw / 2, 360, '500 10.5px Inter', '#3a3d45', 'center');
   });
@@ -74,7 +74,7 @@ function frontTexture(s) {
   ];
   rows.forEach(([t, sub, col], i) => {
     const y = 418 + i * 64;
-    rr(ctx, 24, y, W - 48, 56, 14); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#e4e6ec'; ctx.stroke();
+    rr(ctx, 24, y, W - 48, 56, 14); ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = '#e8e5de'; ctx.stroke();
     ctx.beginPath(); ctx.arc(46, y + 28, 5, 0, Math.PI * 2); ctx.fillStyle = col; ctx.fill();
     text(ctx, t, 62, y + 24, '600 12.5px Inter', INK);
     text(ctx, sub, 62, y + 41, '500 10.5px Inter', '#7a7d86');
@@ -87,18 +87,18 @@ function frontTexture(s) {
 function backTexture(s) {
   const c = canvas(W * s, H * s); const ctx = c.getContext('2d'); ctx.scale(s, s);
   const body = ctx.createLinearGradient(0, 0, W, H);
-  body.addColorStop(0, '#2a3b66'); body.addColorStop(0.5, '#17223f'); body.addColorStop(1, '#22325a');
+  body.addColorStop(0, '#45264b'); body.addColorStop(0.5, '#231226'); body.addColorStop(1, '#3a2140');
   rr(ctx, 0, 0, W, H, R); ctx.fillStyle = body; ctx.fill();
   ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.stroke();
   const frost = ctx.createLinearGradient(0, 0, W, 0);
   frost.addColorStop(0, 'rgba(255,255,255,0.06)'); frost.addColorStop(0.5, 'rgba(255,255,255,0)'); frost.addColorStop(1, 'rgba(255,255,255,0.05)');
   rr(ctx, 0, 0, W, H, R); ctx.fillStyle = frost; ctx.fill();
 
-  rr(ctx, 20, 20, 96, 96, 28); ctx.fillStyle = 'rgba(12,16,28,0.55)'; ctx.fill();
+  rr(ctx, 20, 20, 96, 96, 28); ctx.fillStyle = 'rgba(20,10,22,0.55)'; ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.stroke();
   [[46, 46], [90, 46], [46, 90]].forEach(([x, y]) => {
     const g = ctx.createRadialGradient(x - 3, y - 3, 1, x, y, 15);
-    g.addColorStop(0, '#3b4a6b'); g.addColorStop(0.5, '#0b0e16'); g.addColorStop(1, '#05070b');
+    g.addColorStop(0, '#5a4a5e'); g.addColorStop(0.5, '#0b0e16'); g.addColorStop(1, '#05070b');
     ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 1.5; ctx.stroke();
   });

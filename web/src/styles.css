@@ -1,4 +1,7 @@
-/* Design tokens: OpenDesign "Neutral Modern" (design-systems/default/tokens.css,
+/* Palette after grail-app.com: warm off-white, zinc ink, lilac fills with plum
+ * text, warm near-black in dark mode. Chart colours checked with the dataviz
+ * validator against both surfaces.
+ * Structure: OpenDesign "Neutral Modern" (design-systems/default/tokens.css,
  * Apache-2.0), with a dark theme on the same token names. "Calm, functional,
  * quietly confident. No ornament. Content-first, chrome-second."
  * Rules kept here: whitespace before boxes, flat cards with a 1px border, one
@@ -6,19 +9,19 @@
  * Theme: follows the device unless the person picks Light or Dark
  * (data-theme on <html>, set by /theme.js before the page paints). */
 :root {
-  --bg: #fafafa;
+  --bg: #fafaf8;
   --surface: #ffffff;
-  --fg: #111111;
-  --muted: #6b6b6b;
-  --meta: #8a8a8a;
-  --border: #e5e5e5;
-  --border-soft: #efefef;
+  --fg: #18181b;
+  --muted: #71717a;
+  --meta: #8b8b93;
+  --border: #e8e5de;
+  --border-soft: #f0ede6;
   --fill: color-mix(in oklab, var(--fg), transparent 95%);   /* hover, tracks, quiet chips */
-  --accent: #2f6feb;            /* fills: primary button, active tab */
-  --accent-on: #ffffff;
-  --accent-fg: #2f6feb;         /* accent as text and lines */
-  --accent-hover: color-mix(in oklab, var(--accent), black 8%);
-  --accent-soft: color-mix(in oklab, var(--accent), transparent 90%);
+  --accent: #e6c3ef;            /* fills: primary button, active tab (lilac, dark text) */
+  --accent-on: #2a1029;
+  --accent-fg: #7b3f80;         /* accent as text and lines (plum) */
+  --accent-hover: color-mix(in oklab, var(--accent), var(--accent-fg) 14%);
+  --accent-soft: color-mix(in oklab, var(--accent-fg), transparent 89%);
   --success: #17a34a;
   --warn: #eab308;
   --danger: #dc2626;
@@ -30,8 +33,8 @@
   --warn-soft: color-mix(in oklab, var(--warn), transparent 86%);
   --danger-soft: color-mix(in oklab, var(--danger), transparent 91%);
   /* Charts, checked with the dataviz palette validator against this surface. */
-  --chart-1: #2f6feb; --chart-2: #c2610c;
-  --seq-0: #c7c7c7; --seq-1: #7fa3f2; --seq-2: #4f86ee; --seq-3: #2f6feb; --seq-4: #1d47a3;
+  --chart-1: #8a4a8f; --chart-2: #c2610c;
+  --seq-0: #c49ac9; --seq-1: #a876ae; --seq-2: #8a5490; --seq-3: #6b3770; --seq-4: #4a1f50;
 
   --font-body: 'Inter', -apple-system, system-ui, sans-serif;
   --font-deva: 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;
@@ -39,7 +42,7 @@
   --text-xs: 12px; --text-sm: 14px; --text-base: 16px; --text-lg: 20px; --text-xl: 24px; --text-2xl: 32px; --text-3xl: 48px;
   --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 9999px;
   --elev-raised: 0 2px 8px color-mix(in oklab, var(--fg), transparent 92%);
-  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--accent), transparent 70%);
+  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--accent-fg), transparent 72%);
   --motion-fast: 150ms; --motion-base: 200ms; --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
   /* Older names, kept so every screen picks up the tokens. */
@@ -55,31 +58,31 @@
 /* Dark: same names, structure after OpenDesign's dark system (linear-app). */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e0f10; --surface: #17181a; --fg: #f2f3f4; --muted: #a1a6ad; --meta: #747a82;
+    --bg: #0f0d0c; --surface: #1a1715; --fg: #f3f0eb; --muted: #a8a29e; --meta: #78716c;
     --border: rgba(255, 255, 255, 0.09); --border-soft: rgba(255, 255, 255, 0.05);
-    --accent-fg: #7aa5f5; --accent-hover: color-mix(in oklab, var(--accent), white 10%);
-    --accent-soft: color-mix(in oklab, var(--accent), transparent 82%);
+    --accent: #e7afe7; --accent-on: #1a1018; --accent-fg: #e2b4e6; --accent-hover: color-mix(in oklab, var(--accent), white 14%);
+    --accent-soft: color-mix(in oklab, var(--accent), transparent 84%);
     --success-fg: color-mix(in oklab, var(--success), white 30%); --warn-fg: var(--warn);
     --danger-fg: color-mix(in oklab, var(--danger), white 30%);
     --success-soft: color-mix(in oklab, var(--success), transparent 84%); --warn-soft: color-mix(in oklab, var(--warn), transparent 85%);
     --danger-soft: color-mix(in oklab, var(--danger), transparent 82%);
-    --chart-1: #5b8def; --chart-2: #cf7a30;
-    --seq-0: #4a4d52; --seq-1: #3d68c4; --seq-2: #5b8def; --seq-3: #94b4f4; --seq-4: #c9d9fa;
+    --chart-1: #b177b6; --chart-2: #c4722f;
+    --seq-0: #6b4f6e; --seq-1: #8c6491; --seq-2: #ab7fb0; --seq-3: #c9a2cd; --seq-4: #e6cae8;
     --elev-raised: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e0f10; --surface: #17181a; --fg: #f2f3f4; --muted: #a1a6ad; --meta: #747a82;
+  --bg: #0f0d0c; --surface: #1a1715; --fg: #f3f0eb; --muted: #a8a29e; --meta: #78716c;
   --border: rgba(255, 255, 255, 0.09); --border-soft: rgba(255, 255, 255, 0.05);
-  --accent-fg: #7aa5f5; --accent-hover: color-mix(in oklab, var(--accent), white 10%);
-  --accent-soft: color-mix(in oklab, var(--accent), transparent 82%);
+  --accent: #e7afe7; --accent-on: #1a1018; --accent-fg: #e2b4e6; --accent-hover: color-mix(in oklab, var(--accent), white 14%);
+  --accent-soft: color-mix(in oklab, var(--accent), transparent 84%);
   --success-fg: color-mix(in oklab, var(--success), white 30%); --warn-fg: var(--warn);
   --danger-fg: color-mix(in oklab, var(--danger), white 30%);
   --success-soft: color-mix(in oklab, var(--success), transparent 84%); --warn-soft: color-mix(in oklab, var(--warn), transparent 85%);
   --danger-soft: color-mix(in oklab, var(--danger), transparent 82%);
-  --chart-1: #5b8def; --chart-2: #cf7a30;
-  --seq-0: #4a4d52; --seq-1: #3d68c4; --seq-2: #5b8def; --seq-3: #94b4f4; --seq-4: #c9d9fa;
+  --chart-1: #b177b6; --chart-2: #c4722f;
+  --seq-0: #6b4f6e; --seq-1: #8c6491; --seq-2: #ab7fb0; --seq-3: #c9a2cd; --seq-4: #e6cae8;
   --elev-raised: 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
   color-scheme: dark;
 }
@@ -350,8 +353,8 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 /* ---- Gate tablet: dark, high contrast, very large targets --------------------------- */
 .gate {
   /* Always dark, whatever the theme: readable at night and in sun glare. Same dark tokens, larger everything. */
-  --g-bg: #0e0f10; --g-surface: #17181a; --g-raise: #212226; --g-line: rgba(255, 255, 255, 0.12); --g-ink: #f2f3f4; --g-ink-2: #a1a6ad;
-  --g-accent: #2f6feb; --g-accent-on: #ffffff; --g-ok: #4ade80; --g-warn: #eab308; --g-danger: #f87171;
+  --g-bg: #0f0d0c; --g-surface: #1a1715; --g-raise: #24201d; --g-line: rgba(255, 255, 255, 0.12); --g-ink: #f3f0eb; --g-ink-2: #a8a29e;
+  --g-accent: #e7afe7; --g-accent-on: #1a1018; --g-ok: #4ade80; --g-warn: #eab308; --g-danger: #f87171;
   background: var(--g-bg); color: var(--g-ink); min-height: 100dvh; padding: 20px 24px 28px; display: flex; flex-direction: column; gap: 20px;
   font-size: 18px;
 }
@@ -392,4 +395,4 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 .gate .g-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; }
 @media (max-width: 900px) { .gate .g-grid { grid-template-columns: 1fr; } }
 .gate .g-dpdp { margin-top: auto; font-size: 15px; color: var(--g-ink-2); border-top: 1px solid var(--g-line); padding-top: 14px; }
-.lp-loading { min-height: 100dvh; background: #0a0a0c; }
+.lp-loading { min-height: 100dvh; background: #0c0a0b; }
