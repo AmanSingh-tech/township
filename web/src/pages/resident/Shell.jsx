@@ -14,11 +14,32 @@ export default function ResidentShell() {
   const title = titles[loc.pathname];
   const [consented, setConsented] = useState(!!user.consent_at);
   if (!consented) return <Consent onDone={() => setConsented(true)} />;
+  const nav = (
+    <>
+          <NavLink to="/" end><Icon name="home" />{t('home')}</NavLink>
+          <NavLink to="/bills"><Icon name="bill" />{t('bills')}</NavLink>
+          <NavLink to="/complaints"><Icon name="wrench" />{t('complaints')}</NavLink>
+          <NavLink to="/visitors"><Icon name="users" />{t('visitors')}</NavLink>
+          <NavLink to="/book"><Icon name="clock" />{t('book')}</NavLink>
+    </>
+  );
   return (
+    <div className="res">
+      {/* Wide screens: a sidebar instead of the bottom tabs. */}
+      <aside className="res-side no-print">
+        <Link to="/welcome" className="brand" title={t('aboutTownship')}><img src={LOGO} alt="" /><span>Township</span></Link>
+        <nav aria-label={t('home')}>{nav}</nav>
+        <div className="res-side-foot">
+          <Link to="/welcome" className="res-side-link"><Icon name="back" size={16} />{t('aboutTownship')}</Link>
+          <InstallButton variant="side" />
+          <Link to="/me" className="res-me"><span className="avatar">{initials(user.name)}</span><span><b>{user.name}</b><span className="faint tiny">{user.flat_id}</span></span></Link>
+        </div>
+      </aside>
     <div className="app">
       <header className="topbar no-print">
-        {title ? <div className="title">{title}</div> : (
-          <div>
+        <Link to="/welcome" className="topbar-logo" aria-label={t('aboutTownship')}><img src={LOGO} alt="" /></Link>
+        {title ? <div className="title grow">{title}</div> : (
+          <div className="grow">
             <div className="faint small">{user.flat_id}</div>
             <div className="title">{t('hello')}, {user.name.split(' ')[0]}</div>
           </div>
@@ -30,14 +51,9 @@ export default function ResidentShell() {
       </header>
       <Outlet />
       <div className="tabbar no-print">
-        <nav>
-          <NavLink to="/" end><Icon name="home" />{t('home')}</NavLink>
-          <NavLink to="/bills"><Icon name="bill" />{t('bills')}</NavLink>
-          <NavLink to="/complaints"><Icon name="wrench" />{t('complaints')}</NavLink>
-          <NavLink to="/visitors"><Icon name="users" />{t('visitors')}</NavLink>
-          <NavLink to="/book"><Icon name="clock" />{t('book')}</NavLink>
-        </nav>
+        <nav>{nav}</nav>
       </div>
+    </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { createContext, useContext, useState } from 'react';
 // Resident screens in English, Marathi and Hindi. Staff screens are English.
 const STR = {
   en: {
+    aboutTownship: 'About Township',
     installApp: 'Install app', macStep: 'In Safari, open the File menu and choose Add to Dock.',
     installTitle: 'Add Township to your home screen', installBody: 'Opens like an app, full screen, with alerts.', install: 'Install', installed: 'Installed', howTo: 'How', notNow: 'Not now', iosStep1: 'Tap the Share button in Safari.', iosStep2: 'Choose Add to Home Screen.',
     quickPay: 'Pay', quickRaise: 'Report', quickGuest: 'Guest code', quickBook: 'Book', whatsInIt: 'What is in this', hideDetails: 'Hide details', interestLabel: 'Interest, per bye-laws', filterOpen: 'Open', filterDone: 'Resolved', filterAll: 'All', copy: 'Copy', copied: 'Copied', validFor: 'Valid for {t} more', expiredCode: 'Expired', last6: 'Last 6 months',
@@ -25,6 +26,7 @@ const STR = {
     respondBy: 'Response due by {t}', escalated: 'Escalated to duty manager',
   },
   mr: {
+    aboutTownship: 'Township विषयी',
     installApp: 'अ‍ॅप इन्स्टॉल करा', macStep: 'Safari मध्ये File मेनूमधून Add to Dock निवडा.',
     installTitle: 'Township होम स्क्रीनवर जोडा', installBody: 'अ‍ॅपसारखे पूर्ण स्क्रीनवर उघडते, सूचनांसह.', install: 'इन्स्टॉल करा', installed: 'इन्स्टॉल झाले', howTo: 'कसे', notNow: 'आता नाही', iosStep1: 'Safari मधील Share बटण दाबा.', iosStep2: 'Add to Home Screen निवडा.',
     quickPay: 'भरा', quickRaise: 'तक्रार', quickGuest: 'पाहुणा कोड', quickBook: 'बुक करा', whatsInIt: 'तपशील पहा', hideDetails: 'तपशील लपवा', interestLabel: 'व्याज, उपविधीनुसार', filterOpen: 'सुरू', filterDone: 'सोडवलेल्या', filterAll: 'सर्व', copy: 'कॉपी', copied: 'कॉपी केले', validFor: 'आणखी {t} वैध', expiredCode: 'मुदत संपली', last6: 'मागील ६ महिने',
@@ -47,6 +49,7 @@ const STR = {
     respondBy: '{t} पर्यंत प्रतिसाद', escalated: 'ड्युटी मॅनेजरकडे पाठवली',
   },
   hi: {
+    aboutTownship: 'Township के बारे में',
     installApp: 'ऐप इंस्टॉल करें', macStep: 'Safari में File मेनू से Add to Dock चुनें.',
     installTitle: 'Township को होम स्क्रीन पर जोड़ें', installBody: 'ऐप की तरह पूरी स्क्रीन पर खुलता है, सूचनाओं के साथ.', install: 'इंस्टॉल करें', installed: 'इंस्टॉल हो गया', howTo: 'कैसे', notNow: 'अभी नहीं', iosStep1: 'Safari में Share बटन दबाएँ.', iosStep2: 'Add to Home Screen चुनें.',
     quickPay: 'भुगतान', quickRaise: 'शिकायत', quickGuest: 'मेहमान कोड', quickBook: 'बुक करें', whatsInIt: 'विवरण देखें', hideDetails: 'विवरण छिपाएँ', interestLabel: 'ब्याज, उपनियमों के अनुसार', filterOpen: 'खुली', filterDone: 'सुलझी', filterAll: 'सभी', copy: 'कॉपी', copied: 'कॉपी हो गया', validFor: '{t} और मान्य', expiredCode: 'समय समाप्त', last6: 'पिछले 6 महीने',

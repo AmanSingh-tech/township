@@ -40,7 +40,8 @@ export default function Home() {
   ].filter((q) => !q.hide);
 
   return (
-    <div className="stack-lg">
+    <div className="home-grid">
+      <div className="home-col stack-lg">
       {dues.totalDue > 0 ? (
         <section className="hero-dues">
           <div className="hero-dues-top">
@@ -89,6 +90,8 @@ export default function Home() {
         </div>
       )}
 
+      </div>
+      <div className="home-col stack-lg">
       <section>
         <div className="section-title">
           <h2>{t('openComplaints')}{complaints.length > 0 && <span className="count">{complaints.length}</span>}</h2>
@@ -154,6 +157,7 @@ export default function Home() {
           </div>
         </section>
       )}
+      </div>
       <PaySheet open={paying} onClose={() => setPaying(false)} due={dues.totalDue} onPaid={reload} />
     </div>
   );

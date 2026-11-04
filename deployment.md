@@ -16,7 +16,8 @@ allows ("Mock payments, messages and outside systems"), and each mock is labelle
 
 On the live app or a local run. Each step names the login to use (section 2).
 
-1. **Resident login and bills.** Sign in as Swati (`9822010002`). Home shows ₹13,004 due, 47 days overdue; tap
+1. **Resident login and bills.** Sign in as Swati (`9822010002`). Home shows about ₹13,000 due, 47 days overdue on the day the demo data loaded (interest adds a
+   few rupees and the overdue count a day for every day since); tap
    **What is in this** for the two unpaid months and the interest. Open **Bills**: tap a month in the chart, then a bill,
    to see 980 sq ft × ₹6.50.
 2. **Test payment.** Tap **Pay now**, then **Complete test payment**. A numbered receipt appears under Bills →

@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate , Link } from 'react-router-dom';
 import { api, getSession, setSession } from '../../api.js';
 import { ThemeSwitch } from '../../theme.jsx';
 import { Icon, useApi, usePoll } from '../../ui.jsx';
@@ -36,7 +36,7 @@ export default function DeskShell() {
   return (
     <div className="desk">
       <aside className="side">
-        <div className="brand"><img src={LOGO} alt="" /><span>Township desk</span></div>
+        <Link to="/welcome" className="brand" title="About Township"><img src={LOGO} alt="" /><span>Township desk</span></Link>
         <nav>
           {can(user.role, 'complaints') && <NavLink to="/desk" end><Icon name="inbox" size={18} />Complaints<span className={`count ${late ? 'alert' : ''}`}>{late ? `${late} late` : ''}</span></NavLink>}
           {can(user.role, 'money') && <>
