@@ -142,21 +142,34 @@ function drawFrame(out, face, theta, front, back, s) {
   ctx.fillStyle = sh; ctx.fillRect(-span * s, -span * s, span * 2 * s, span * 2 * s);
   ctx.restore();
 
-  // Edge: the side facing the camera.
+  // Edge: the side facing the camera. Side-on it runs the phone's full height
+  // with rounded ends; as the face turns towards the camera it shortens, so it
+  // stays hidden behind the face's rounded corners and never pokes out.
   if (Math.abs(sin) > 0.02) {
-    const xe = sin > 0 ? W / 2 : -W / 2;
+    const right = sin > 0, xe = right ? W / 2 : -W / 2;
     const [ax, ap] = proj(xe, -DEPTH / 2), [bx, bp] = proj(xe, DEPTH / 2);
-    const he = H / 2 - R * 0.55;
-    const g = ctx.createLinearGradient(ax * s, 0, bx * s, 0);
-    g.addColorStop(0, '#5a5e67'); g.addColorStop(0.5, '#2a2c31'); g.addColorStop(1, '#17181b');
-    ctx.beginPath();
-    ctx.moveTo(ax * s, (cy - he * ap) * s); ctx.lineTo(bx * s, (cy - he * bp) * s);
-    ctx.lineTo(bx * s, (cy + he * bp) * s); ctx.lineTo(ax * s, (cy + he * ap) * s); ctx.closePath();
-    ctx.fillStyle = g; ctx.fill();
+    const left = Math.min(ax, bx), w = Math.abs(bx - ax), p = (ap + bp) / 2;
+    const h = (H - 2 * R * 0.62 * Math.abs(cos)) * p;
+    const top = cy - h / 2;
+    const metal = ctx.createLinearGradient(left * s, 0, (left + w) * s, 0);
+    metal.addColorStop(0, '#26282c'); metal.addColorStop(0.3, '#6a6e77'); metal.addColorStop(0.5, '#8b8f98');
+    metal.addColorStop(0.7, '#4b4e55'); metal.addColorStop(1, '#1c1d20');
+    rr(ctx, left * s, top * s, w * s, h * s, Math.min(w / 2, 14 * p) * s); ctx.fillStyle = metal; ctx.fill();
+    // Light along the rim, darker as the side turns away from the light.
+    rr(ctx, left * s, top * s, w * s, h * s, Math.min(w / 2, 14 * p) * s);
+    ctx.fillStyle = `rgba(0,0,0,${(1 - Math.abs(sin)) * 0.35})`; ctx.fill();
+    // Buttons: power on the right side, volume on the left.
+    if (w > 6) {
+      ctx.fillStyle = 'rgba(255,255,255,0.16)';
+      const btn = (y0, len) => { rr(ctx, (left + w * 0.3) * s, (cy + (y0 - H / 2) * p) * s, w * 0.4 * s, len * p * s, 2 * s); ctx.fill(); };
+      if (right) btn(150, 70); else { btn(130, 40); btn(185, 40); }
+    }
   }
 
   // Face, front or back, drawn in thin vertical strips so it narrows and
   // grows with perspective.
+  // Side-on, the face is thinner than a hair: skip it rather than leave a sliver.
+  if (Math.abs(cos) < 0.05) return;
   const isFront = cos >= 0;
   const tex = isFront ? front : back;
   const z = isFront ? -DEPTH / 2 : DEPTH / 2;
