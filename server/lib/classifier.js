@@ -1,22 +1,27 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { env } from '../env.js';
 
-export const CATEGORIES = ['Plumbing', 'Electrical', 'Lift', 'Security', 'Housekeeping', 'Parking', 'Pest control', 'Civil', 'Noise', 'Common areas', 'Other'];
+export const CATEGORIES = ['Plumbing', 'Electrical', 'Lift', 'Safety', 'Security', 'Housekeeping', 'Parking', 'Pest control', 'Civil', 'Noise', 'Common areas', 'Other'];
+// Below this, the desk shows the category as unsure and asks a person to check it.
+export const UNSURE_BELOW = 0.6;
 export const URGENCIES = ['low', 'medium', 'high', 'critical'];
 
 // Safety words escalate to the duty manager by rule, whatever any model says.
 // English, Hindi and Marathi (Devanagari and common romanised spellings).
+// Each hazard also fixes the category, since a keyword model can misread it
+// ("smell of gas" looks like Housekeeping).
 const SAFETY = [
-  [/\bfire\b|\bsmoke\b|\bburning\b|आग|धुआं|धूर|\baag\b/i, 'fire or smoke'],
-  [/\bgas\b.*\b(leak|smell)|\b(leak|smell)\w*\b.*\bgas\b|गैस|गॅस|\bgas leak/i, 'gas leak'],
-  [/\b(lift|elevator)\b.*\b(stuck|trapped|struck)\b|\b(stuck|trapped)\b.*\b(lift|elevator)\b|लिफ्ट.*(फंस|अटक|बंद)/i, 'person stuck in lift'],
-  [/\bshock\b|\bcurrent\s+(lag|aa|is coming)|\bspark(s|ing)?\b|\bshort[- ]?circuit\b|करंट|झटका|शॉक/i, 'electric shock or sparking'],
+  [/\bfire\b|\bsmoke\b|\bburning\b|आग|धुआं|धूर|\baag\b/i, 'fire or smoke', 'Safety'],
+  [/\bgas\b.*\b(leak|smell)|\b(leak|smell)\w*\b.*\bgas\b|गैस|गॅस|\bgas leak/i, 'gas leak', 'Safety'],
+  [/\b(lift|elevator)\b.*\b(stuck|trapped|struck)\b|\b(stuck|trapped)\b.*\b(lift|elevator)\b|लिफ्ट.*(फंस|अटक|बंद)/i, 'person stuck in lift', 'Lift'],
+  [/\bshock\b|\bcurrent\s+(lag|aa|is coming)|\bspark(s|ing)?\b|\bshort[- ]?circuit\b|करंट|झटका|शॉक/i, 'electric shock or sparking', 'Electrical'],
 ];
 
 export function safetyCheck(text) {
   for (const [re, label] of SAFETY) if (re.test(text)) return label;
   return null;
 }
+export const safetyCategory = (label) => SAFETY.find((s) => s[1] === label)?.[2] || null;
 
 const LEXICON = {
   Plumbing: ['leak', 'leaking', 'tap', 'pipe', 'drain', 'flush', 'toilet', 'water', 'geyser', 'clog', 'blocked', 'overflow', 'नल', 'पानी', 'पाणी', 'गळती', 'nal', 'paani'],
@@ -45,7 +50,10 @@ export function classifyLocal(text) {
   let urgency = 'medium';
   if (HIGH.test(text) || category === 'Lift') urgency = 'high';
   else if (LOW.test(text) || ['Noise', 'Parking', 'Civil'].includes(category)) urgency = 'low';
-  return { category, urgency, confidence: total ? +(top / total).toFixed(2) : 0.2, source: 'local' };
+  // Share of the matched keywords, discounted when there is little evidence:
+  // one keyword alone is a guess (about 50%), not "100% sure".
+  const confidence = total ? (top / total) * (1 - 0.5 ** top) : 0.2;
+  return { category, urgency, confidence: +confidence.toFixed(2), source: 'local' };
 }
 
 let client;

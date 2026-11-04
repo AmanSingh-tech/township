@@ -6,7 +6,7 @@ import { getSettings } from '../lib/settings.js';
 import { readBankStatement } from '../lib/csv.js';
 import { matchStatement } from '../lib/matcher.js';
 import { logEvent, pickAssignee, dueBy } from '../lib/complaints.js';
-import { CATEGORIES, URGENCIES } from '../lib/classifier.js';
+import { CATEGORIES, URGENCIES, UNSURE_BELOW } from '../lib/classifier.js';
 import { committeeReport, reportCsv, signReport, listSignoffs, getSignoff } from '../lib/report.js';
 import { prepareBillRun, listBillRuns, decideBillRun } from '../lib/billruns.js';
 import { correctResident } from '../lib/privacy.js';
@@ -37,7 +37,7 @@ r.get('/complaints', complaintsRole, h(async (req, res) => {
 r.get('/staff', complaintsRole, h(async (req, res) => res.json(await many('SELECT * FROM staff WHERE active ORDER BY skill, name'))));
 r.get('/meta', h(async (req, res) => {
   const s = await getSettings();
-  res.json({ categories: CATEGORIES, urgencies: URGENCIES, sla: s.sla, demoStatement: !!s.demoBankStatement });
+  res.json({ categories: CATEGORIES, urgencies: URGENCIES, unsureBelow: UNSURE_BELOW, sla: s.sla, demoStatement: !!s.demoBankStatement });
 }));
 
 r.patch('/complaints/:id', complaintsRole, h(async (req, res) => {

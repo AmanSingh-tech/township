@@ -120,8 +120,12 @@ export default function Queue() {
               <div className="stack" style={{ gap: 8 }}>
                 <div className="row between">
                   <span className="label">Category</span>
-                  <span className="faint tiny">AI: {detail.ai_category}, {Math.round((detail.ai_confidence || 0) * 100)}% sure{detail.category_changed_by ? ` · changed by ${detail.category_changed_by}` : ''}</span>
+                  <span className="faint tiny">AI: {detail.ai_category}, {Math.round((detail.ai_confidence || 0) * 100)}% sure{detail.category_changed_by ? ` · changed by ${detail.category_changed_by}` : ''}
+                    {detail.escalated && detail.ai_category !== detail.category ? ' · set by the safety rule' : ''}</span>
                 </div>
+                {!detail.category_changed_by && !detail.escalated && (detail.ai_confidence ?? 1) < (meta?.unsureBelow ?? 0.6) && (
+                  <p className="notice warn small">The AI is unsure about this category. Check it and tap the right one if needed.</p>
+                )}
                 <div className="chips">
                   {meta?.categories.map((cat) => (
                     <button key={cat} className={`chip ${detail.category === cat ? 'on' : ''}`} style={{ height: 30, fontSize: 13 }}

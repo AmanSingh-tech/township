@@ -44,3 +44,23 @@ test('the same lift reported by several flats is linked, never closed', async ()
   assert.ok(dups.length >= 3);
   assert.ok(dups.every((c) => c.status !== 'closed'));
 });
+
+test('a hazard sets the category by rule, and the model\'s guess is kept for the record', async () => {
+  const { createComplaint } = await import('../lib/complaints.js');
+  const { one: row } = await import('../db.js');
+  const u = await row("SELECT * FROM users WHERE phone = '9822010003'");
+  const id = await createComplaint({ flatId: u.flat_id, userId: u.id, actor: u.name, text: 'Strong smell of gas near the kitchen pipeline since morning' });
+  const c = await row('SELECT * FROM complaints WHERE id = $1', [id]);
+  assert.equal(c.category, 'Safety');
+  assert.equal(c.urgency, 'critical');
+  assert.equal(c.escalated, true);
+  assert.equal(c.ai_category, 'Housekeeping', 'the keyword model read "smell" as housekeeping; the rule overrides it');
+});
+
+test('one keyword is a guess, not certainty', async () => {
+  const one = classifyLocal('Bad smell in the corridor');
+  assert.ok(one.confidence <= 0.6, `confidence ${one.confidence}`);
+  const many = classifyLocal('Kitchen tap leaking and the drain pipe is blocked, water overflow');
+  assert.equal(many.category, 'Plumbing');
+  assert.ok(many.confidence > 0.9, `confidence ${many.confidence}`);
+});
