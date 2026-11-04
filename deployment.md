@@ -1,7 +1,7 @@
 # Township: deployment
 
 Repository: https://github.com/AmanSingh-tech/township
-Live app: LIVE_URL (Render free plan: the first visit after a quiet spell takes about a minute while the server wakes)
+Live app: https://township-91vm.onrender.com/welcome (Render free plan: the first visit after a quiet spell takes about a minute while the server wakes)
 
 The app is deployed on Render from `render.yaml`, and also runs on any machine with Docker using one command. Both
 load the sample township on first start. The project uses no paid services. SMS, online payment and file storage are mocked, as the brief

@@ -45,7 +45,7 @@
 <h1>Township: Technical Design Document</h1>
 <table class="meta">
   <tr><td>Repository</td><td><a href="https://github.com/AmanSingh-tech/township">https://github.com/AmanSingh-tech/township</a></td></tr>
-  <tr><td>Live app</td><td>Not deployed publicly. Runs locally with <code>docker compose up --build</code> (see deployment.md).</td></tr>
+  <tr><td>Live app</td><td><a href="https://township-91vm.onrender.com/welcome">https://township-91vm.onrender.com/welcome</a> (Render free plan: the first visit after a quiet spell takes about a minute). Demo sign-ins are listed on the sign-in page.</td></tr>
   <tr><td>Client</td><td>Company A, Pune: 2,400 flats in 28 towers</td></tr>
   <tr><td>Author, date</td><td>Aman Kumar Singh, 4 November 2026</td></tr>
 </table>
@@ -208,7 +208,7 @@ flowchart TD
 <ul>
   <li><b>Cut:</b> WhatsApp (needs Meta business approval), real SMS and payments (mocked, as the brief allows, following the real providers' steps), native apps, and technician sign-in.</li>
   <li><b>Next:</b> measure AI accuracy from the stored guesses and corrections and tune the 0.6 threshold; remember UPI IDs by default to raise automatic matching; WhatsApp alerts through the same outbox; bank feeds instead of CSV uploads.</li>
-  <li><b>Limits:</b> not deployed publicly; the local classifier is keyword-based (anything it is unsure of goes to a person); tested on one server process.</li>
+  <li><b>Limits:</b> Render free plan (sleeps when idle; uploaded photos are lost on restart); a keyword-based local classifier, with anything unsure going to a person; one server process.</li>
 </ul>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
