@@ -54,11 +54,11 @@
 <p class="muted">Figures marked <span class="m">measured</span> come from tests or the evaluation and can be reproduced with the commands in section 8; figures marked <span class="m">target</span> are the brief's goals or design aims. Assumptions are labelled A1–A12 (section 1.3). Appendix A checks the assignment point by point; Appendix B answers likely questions.</p>
 
 <h2>1. Executive summary and the client's problem</h2>
-<p>Company A runs a 2,400-flat township whose money and operations live in Excel, phone calls, 28 WhatsApp groups and paper gate registers. Township replaces those with one web app: residents pay maintenance, raise complaints and approve visitors from their phones; bank statements match themselves where the evidence is clear and wait for a person where it is not; the committee gets a monthly report built from an append-only ledger. The core build (resident login, bills with test payment, bank matching, complaints with assignment and status, the committee view) works end to end on the brief's sample data, is live, and is backed by 62 server tests, 6 browser tests and a reproducible evaluation.</p>
+<p>Company A runs a 2,400-flat township whose money and operations live in Excel, phone calls, 28 WhatsApp groups and paper gate registers. Township replaces those with one web app: residents pay maintenance, raise complaints and approve visitors from their phones; bank statements match themselves where the evidence is clear and wait for a person where it is not; the committee gets a monthly report built from an append-only ledger. The core build (resident login, bills with test payment, bank matching, complaints with assignment and status, the committee view) works end to end on the brief's sample data, is live, and is backed by 63 server tests, 6 browser tests and a reproducible evaluation.</p>
 <table>
   <tr><th style="width:44%">Result</th><th style="width:18%">Measured</th><th>How</th></tr>
   <tr><td>Bank credits posted to the wrong flat</td><td>0 of 140</td><td>Evaluation: 5 realistic statements with known flats</td></tr>
-  <tr><td>Payment matching time, against by hand</td><td>−88%</td><td>Same evaluation; the brief's target is −80% (section 5.3)</td></tr>
+  <tr><td>Payment matching time, against by hand</td><td>−88% (estimated)</td><td>Estimated on the 140-credit evaluation dataset using the time assumptions in A12; about −77% if confirming a suggestion takes 1 minute. The brief's target is −80% (section 5.3)</td></tr>
   <tr><td>Complaint category right; right when the model says it is sure</td><td>81%; 100%</td><td>90 labelled complaints in English, Hindi, Marathi, Hinglish</td></tr>
   <tr><td>Safety hazards escalated; false alarms</td><td>14 of 14; 0</td><td>Same complaint set</td></tr>
   <tr><td>Requests at five times the bill-day peak, 95th percentile</td><td>under 28 ms</td><td>Load test at full size; hardware in section 8</td></tr>
@@ -126,7 +126,7 @@
   <tr><td>Resident sign-in</td><td>One-time codes, hashed, rate-limited, linked to a flat</td><td><code>api.test</code>: single-use codes, lock after five wrong tries, three an hour, same reply for unknown numbers, expired sessions refused; every browser test signs in</td></tr>
   <tr><td>Maintenance billing</td><td>Area × rate copied at issue; daily simple interest; interest first, then oldest bill; bill runs approved by a second person</td><td><code>billing.test</code>: the brief's three flats match its table exactly; interest; allocation; exact rounding; bill runs. <code>governance.test</code>: issued only after approval, at the approved rate</td></tr>
   <tr><td>Test payment</td><td>Server-priced order, signature check, the gateway's own record, one transaction for payment, ledger, receipt and alert</td><td><code>api.test</code>: signature checked, amount from the gateway, recorded once (callback and webhook); <code>operations.test</code>: the test gateway; PDF receipt</td></tr>
-  <tr><td>Bank reconciliation</td><td>Evidence scoring with reasons; posts only on strong, unambiguous evidence; a second person for manual posts</td><td><code>matching.test</code> and <code>reconciliation.test</code> (section 5.5); the evaluation: 0 wrong posts in 140 credits, −88% time</td></tr>
+  <tr><td>Bank reconciliation</td><td>Evidence scoring with reasons; posts only on strong, unambiguous evidence; a second person for manual posts</td><td><code>matching.test</code> and <code>reconciliation.test</code> (section 5.5); the evaluation: 0 wrong posts in 140 credits, an estimated −88% time (section 5.3)</td></tr>
   <tr><td>Complaints with assignment and status</td><td>Classifier, safety rule, technician by category and tower, response timer, linked duplicates, rate or reopen</td><td><code>complaints.test</code>; the browser test "complaint raised, resolved and rated"; the evaluation for triage (section 6)</td></tr>
   <tr><td>Committee view</td><td>Report from the ledger; the brief's three measures; sign-off with a fingerprint</td><td><code>governance.test</code>: a signed month is frozen and verified; a unit test pins the matching-time calculation; the browser test signs the report</td></tr>
   <tr><td>Access control</td><td>Roles declared on every route; residents scoped to their flat; two-person rules in the database</td><td><code>api.test</code>: roles reach only their areas; <code>reconciliation.test</code>: the database refuses self-approval</td></tr>
@@ -215,7 +215,7 @@ flowchart LR
 </table>
 
 <h3>4.4 Scaling</h3>
-<p><span class="m">measured</span> One process handles 270–300 requests a second against a bill-day peak of about 8, so one township has wide headroom. The API is stateless: sessions, rate-limit counters and the outbox live in PostgreSQL, and all locking is in the database (section 5.4), so more processes can run behind a load balancer without code changes. Next steps by growth: more processes and a connection pooler for a busier township; monthly partitions and archiving for <code>visitors</code>, <code>messages</code> and <code>ledger</code> over years; a read replica for the report and Tally export; a <code>township_id</code> with row-level security, or a database per township, to serve many. What would bind first is database write throughput for very large bill runs across many townships.</p>
+<p><span class="m">measured</span> One process handles 270–300 requests a second against a bill-day peak of about 8, so one township has wide headroom. Normal request handling and financial locking are designed to run across several processes through PostgreSQL: sessions, rate-limit counters and the outbox live there, and all locking is in the database (section 5.4). The one exception is the demo reset's maintenance gate, which is intentionally process-local because the assignment deployment runs a single application process; a multi-process deployment would move it to shared, database-backed coordination. Next steps by growth: more processes and a connection pooler for a busier township; monthly partitions and archiving for <code>visitors</code>, <code>messages</code> and <code>ledger</code> over years; a read replica for the report and Tally export; a <code>township_id</code> with row-level security, or a database per township, to serve many. What would bind first is database write throughput for very large bill runs across many townships.</p>
 
 <h2>5. Financial reconciliation and safety</h2>
 <p>This is the brief's hard part, so it carries the most safeguards and the most evidence.</p>
@@ -256,13 +256,14 @@ flowchart TD
 <h3>5.2 Payments, receipts and the ledger</h3>
 <p>The server creates the gateway order for the amount it computes (never the browser's); after checkout it checks the signature and fetches the payment from the gateway; then the payment, its ledger line, its receipt number and its alert are written in one transaction. A signed webhook covers residents who close the app mid-payment, and either path records the payment once. Receipt numbers come from a counter row updated in the payment's own transaction, not a PostgreSQL sequence, so a failed payment gives its number back and receipts have no gaps.</p>
 
-<h3>5.3 Matching time: how −88% is calculated</h3>
-<p>One model (<code>server/lib/matchtime.js</code>) is used by both the committee report, on real imports, and the evaluation, on statements with known flats, with the minutes in A12. <span class="m">measured</span> On the evaluation's 140 maintenance credits:</p>
+<h3>5.3 Matching time: an estimated −88%, and how it is calculated</h3>
+<p class="note"><b>88.2% estimated matching-time reduction on the 140-credit evaluation dataset, using the stated time assumptions (A12).</b> The credit counts are measured; the minutes per credit are assumptions. It is not a measured saving in a real society's staff time.</p>
+<p>One model (<code>server/lib/matchtime.js</code>) is used by both the committee report, on real imports, and the evaluation, on statements with known flats, with the minutes in A12. On the evaluation's 140 maintenance credits (counts <span class="m">measured</span>, minutes assumed):</p>
 <table>
   <tr><th style="width:44%">Step</th><th>Value</th></tr>
   <tr><td>By hand: every credit at 2 minutes</td><td>140 × 2 = 280 minutes</td></tr>
   <tr><td>With the app: 77 posted (0 min), 62 queued with the right top suggestion (0.5 min), 1 queued without it (2 min)</td><td>0 + 31 + 2 = 33 minutes</td></tr>
-  <tr><td>Saved</td><td>(280 − 33) ÷ 280 = 88.2%, against the brief's target of 80%</td></tr>
+  <tr><td>Saved (estimate)</td><td>(280 − 33) ÷ 280 = 88.2%, against the brief's target of 80%</td></tr>
 </table>
 <p class="muted">The minutes are assumptions (A12); with 1 minute to confirm a suggestion instead of 0.5, the saving is about 77%. <code>npm run eval</code> prints the inputs, so other numbers can be tried.</p>
 
@@ -342,10 +343,10 @@ flowchart TD
 </ul>
 
 <h2>8. Testing and reproducibility</h2>
-<p><span class="m">measured</span> From a fresh clone (<code>git clone</code>, <code>npm ci</code>): <b>62 server tests</b> and <b>6 browser tests</b> pass, and <code>npm run eval</code> gives identical results on repeated runs and matches the committed <code>docs/evaluation.md</code>. The evaluation data is in the repository (<code>server/eval/</code>), and the statements are generated from fixed seeds.</p>
+<p><span class="m">measured</span> From a fresh clone (<code>git clone</code>, <code>npm ci</code>): <b>63 server tests</b> and <b>6 browser tests</b> pass, and <code>npm run eval</code> gives identical results on repeated runs and matches the committed <code>docs/evaluation.md</code>. The evaluation data is in the repository (<code>server/eval/</code>), and the statements are generated from fixed seeds.</p>
 <table>
   <tr><th style="width:40%">Command</th><th>What it proves</th></tr>
-  <tr><td><code>npm test</code></td><td>62 server tests: billing, interest, payments, matching, reconciliation safety, complaints, roles, governance, privacy, the demo reset, and the evaluation floors</td></tr>
+  <tr><td><code>npm test</code></td><td>63 server tests: billing, interest, payments, matching, reconciliation safety, complaints, roles, governance, privacy, the demo reset, and the evaluation floors</td></tr>
   <tr><td><code>npm run test:e2e</code></td><td>6 browser tests in headless Chrome: the main flows, and no browser errors on any page</td></tr>
   <tr><td><code>npm run eval</code></td><td>Sections 5.3 and 6, written to <code>docs/evaluation.md</code></td></tr>
   <tr><td><code>npm run load:seed</code> then <code>npm run load:run</code></td><td>The load test below</td></tr>
@@ -359,7 +360,7 @@ flowchart TD
   <li><b>Amenity booking:</b> slots and capacity, limits, fees on the bill, free cancellation until a cut-off, closed days that refund. Two flats cannot take the last place at once: booking locks the amenity row and re-counts inside the lock.</li>
   <li><b>Resident extras:</b> family and tenant members, notices, push alerts, English, Marathi and Hindi, and an installable web app with a Download app button (the browser's prompt, or Safari's steps; hidden once installed).</li>
   <li><b>Office extras:</b> register import from Excel with a preview, Tally export, the message outbox, data requests, the audit log.</li>
-  <li><b>Demo reset</b> (demo mode, admins only): restores the sample township; other requests get "resetting demo data, try again" and requests already running finish first; workers pause; everyone signs in again; every reset stays in the audit log. The pause flag lives in the process, right for the demo's single process.</li>
+  <li><b>Demo reset</b> (demo mode, admins only): restores the sample township; other requests get "resetting demo data, try again" and requests already running finish first; workers pause; everyone signs in again; every reset stays in the audit log. The pause is intentionally process-local because the deployment runs a single application process (section 4.4); with several processes it would move to the database. <b>If a reset fails:</b> the whole rebuild, schema included, is one PostgreSQL transaction, so it is rolled back and the previous demo state is kept exactly, earlier reset records included; the pause is always lifted and the background workers carry on by themselves; the failure is recorded in the audit log (<code>demo.reset_failed</code>) and the server log, and the admin is told nothing was changed. <code>demo-reset.test</code> forces a failure after the data is rebuilt and checks all of this.</li>
   <li><b>Front page</b> (<code>/welcome</code>): explains the product in seven chapters; loaded separately, so the app carries none of it.</li>
   <li><b>Optional tooling, not a completed production deployment:</b> Terraform for AWS Mumbai (written and checked in CI, never applied) and the load-test scripts.</li>
 </ul>
@@ -391,7 +392,7 @@ flowchart TD
 <div class="qa"><b>Why not use an LLM for bank matching too?</b>A wrong match is a wrong flat's money and a committee's trust. Rules give the same answer every time and explain every point, so they can be audited. An LLM could suggest flats in the queue later, never post.</div>
 <div class="qa"><b>What happens when Claude is down, slow or wrong?</b>Down or slow (8 s): the local model answers and the complaint is saved. Wrong: the help desk sees the confidence and changes the category in one tap; the AI's guess is kept to measure accuracy. Dangerous: the safety rule has already escalated it.</div>
 <div class="qa"><b>Can a payment end up on the wrong flat?</b>Automatic posting needs strong, unambiguous evidence and no rival; everything else goes to a person, and a manual post needs a second person. The evaluation measured no wrong posts in 140 test credits; that is a result on the tested data, which is why the queue and the approvals exist.</div>
-<div class="qa"><b>How exactly is the 88% calculated?</b>Section 5.3: 280 minutes by hand against 33 with the app, using the minutes in A12, from <code>npm run eval</code>. The committee report applies the same model to real imports.</div>
+<div class="qa"><b>How exactly is the 88% calculated?</b>Section 5.3. It is an estimate on the 140-credit evaluation dataset, not a measured staff saving: 280 minutes by hand against 33 with the app, using the minutes in A12, from <code>npm run eval</code>; with 1 minute per confirmation it is about 77%. The committee report applies the same model to real imports.</div>
 <div class="qa"><b>What if the same statement is uploaded twice, or a payment fails half-way?</b>Rows whose UTR is already imported post nothing; a failed payment rolls back with its ledger line, audit entry and receipt number. Both are tested (section 5.5).</div>
 <div class="qa"><b>Can two flats book the last slot?</b>No: booking locks the amenity row and re-counts inside the lock. The same pattern protects payments, receipts, bill runs and approvals (section 5.4).</div>
 <div class="qa"><b>Why 21% interest?</b>The brief gives no rate. 21% is a configurable demonstration rate, to be confirmed against the federation's adopted bye-laws before production (A2).</div>

@@ -40,9 +40,10 @@ minute). Demo sign-ins are listed on the sign-in page; codes appear on screen be
 **AI and automation, measured** (`npm run eval`, [full report](docs/evaluation.md)): on 90 labelled complaints the local
 classifier gets 81% of categories right and is right every time it says it is sure; all 14 hazards escalate with no
 false alarms. On five realistic month-end statements (140 credits), **no credit is posted to the wrong flat**, 55% post
-themselves, and matching takes about 88% less time than by hand (the brief's target is 80%).
+themselves, and matching time is an estimated 88% lower than by hand on that 140-credit evaluation set, using stated time
+assumptions (about 77% if confirming a suggestion takes a minute; the brief's target is 80%).
 
-**Tested:** 62 server tests and 6 browser tests (they pass from a clean clone), plus a full-size load test (2,400 flats, 95% of requests under 28 ms at
+**Tested:** 63 server tests and 6 browser tests (they pass from a clean clone), plus a full-size load test (2,400 flats, 95% of requests under 28 ms at
 five times the bill-day peak).
 
 ## Runs free
@@ -77,7 +78,7 @@ Needs Node 20+ and Docker.
 ```bash
 docker compose up -d db                                            # PostgreSQL 16 on localhost:5440
 docker compose exec db psql -U township -c "create database township_test"
-npm install
+npm ci                        # exact versions from the lockfile (use npm install only to change dependencies)
 npm run dev:fixtures          # sample township
 npm run dev                   # API :4000 (migrates on start), app http://localhost:5173
 ```

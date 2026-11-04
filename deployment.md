@@ -27,7 +27,15 @@ The live site is on Render's free plan. A scheduled ping keeps it awake, but if 
 to a minute; refresh once. Data changed by one reviewer is visible to the next, because it is one shared demo township.
 To start from a clean township, sign in as admin (`9000000005`) → **Admin** → **Reset demo data** → confirm. It puts
 the sample township back as it was, signs everyone out, and is recorded in the audit log; anyone using the app at that
-moment sees "Resetting demo data, try again in a moment" for the few seconds it takes.
+moment sees "Resetting demo data, try again in a moment" for the few seconds it takes. The reset is all or nothing:
+if it fails, nothing is changed, the pause is lifted, and the failure is recorded in the audit log.
+
+All accounts, names, phone numbers, flats and UPI IDs are invented, and the sign-in codes are shown on screen only
+because this is a demo; never use real credentials or personal data here.
+
+**Review before about 4 December 2026.** The live database is on Render's free plan, which expires 30 days after it
+was created. If the link stops working, the local Docker setup (section 3) runs the same app with the same sample
+township in a few minutes.
 
 ## 1. Five-minute tour of the core build
 
@@ -103,10 +111,13 @@ applies the migrations and loads the sample township. The log ends with
 
 ## 4. Run for development, tests and evaluation
 
-You need Node 20+ and Docker.
+You need Node 20+ and Docker. `npm ci` installs the exact versions in `package-lock.json`, which is the reproducible
+path the TDD's results come from (CI and the Dockerfile use it too). Use `npm install` only in everyday development,
+when adding or changing a dependency, since it may update the lockfile.
 
 ```bash
-npm install
+git clone https://github.com/AmanSingh-tech/township && cd township
+npm ci
 docker compose up -d db                                            # PostgreSQL 16 on localhost:5440
 docker compose exec db psql -U township -c "create database township_test"
 npm run dev:fixtures                                               # sample township
@@ -114,7 +125,7 @@ npm run dev                                                        # API :4000, 
 ```
 
 ```bash
-npm test             # 62 server tests: billing, interest, matching, reconciliation safety, complaints, roles, demo reset, evaluation floors
+npm test             # 63 server tests: billing, interest, matching, reconciliation safety, complaints, roles, demo reset, evaluation floors
 npm run eval         # scores complaint triage and bank matching; writes docs/evaluation.md
 npm run test:e2e     # 6 browser tests (needs Chrome; set CHROME_PATH if it is not /usr/bin/google-chrome)
 npm run load:seed && npm run load:run      # optional: full-size load test, 2,400 flats
@@ -193,7 +204,7 @@ local run.
 
 - Reviewers share one demo township on the live app; an admin can reset it (section 0).
 - The live app is on Render's free plan: it sleeps after 15 idle minutes, photos uploaded there are lost when it
-  restarts, and the free database expires after 30 days.
+  restarts, and the free database expires after 30 days (around 4 December 2026; section 3 is the fallback).
 - Payments, SMS and WhatsApp are not real. Payments and SMS follow the real providers' steps behind a labelled
   placeholder; WhatsApp is not built.
 - Without an `ANTHROPIC_API_KEY` the complaint AI is the built-in keyword model (81% category accuracy in
