@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { useScene } from '../motion/useScene.js';
 import { fadeUp, highlightWords, sheetIn } from '../motion/effects.js';
-import Chapter from '../components/Chapter.jsx';
 import SplitWords from '../components/SplitWords.jsx';
 
 const TEXT = 'Every rupee is a line in the ledger. Lines are never edited, only corrected by new ones. A second person approves every manual decision. Receipts never skip a number. And once the committee signs a month, the database itself will not let anyone change it.';
@@ -17,7 +16,6 @@ export default function Ledger() {
   });
   return (
     <section className="lp-ledger" data-nav="light" ref={ref} aria-label="Accounts">
-      <Chapter about="trust" n={6} />
       <div className="lp-wrap">
         <p className="lp-eyebrow">Accounts you can trust</p>
         <SplitWords as="p" className="lp-ledger-text" text={TEXT} />

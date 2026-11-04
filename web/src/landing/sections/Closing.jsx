@@ -5,7 +5,6 @@ import { fadeUp, revealWords } from '../motion/effects.js';
 import SplitWords from '../components/SplitWords.jsx';
 import Icon from '../components/Icon.jsx';
 import { LOGO } from '../../brand.js';
-import Chapter from '../components/Chapter.jsx';
 
 const ROLES = [
   ['Residents', 'Pay, report, approve visitors, book.', '/login'],
@@ -22,7 +21,6 @@ export default function Closing({ cta, demo }) {
   });
   return (
     <section className="lp-closing" ref={ref}>
-      <Chapter about="getting started" n={7} />
       <div className="lp-wrap">
         <img className="lp-closing-logo" src={LOGO} alt="" />
         <SplitWords as="h2" className="lp-h" text="Your township is ready." />

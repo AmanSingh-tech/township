@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import { gsap } from '../motion/gsap.js';
 import { useScene } from '../motion/useScene.js';
 import { fadeUp, parallax, revealWords, sheetIn } from '../motion/effects.js';
-import Chapter from '../components/Chapter.jsx';
 import SplitWords from '../components/SplitWords.jsx';
 import Skyline from '../components/Skyline.jsx';
 import { Tablet } from '../components/Devices.jsx';
@@ -31,7 +30,6 @@ export default function Gate() {
   return (
     <section className="lp-gate" ref={ref} aria-label="The gate tablet">
       <div className="lp-gate-sky" aria-hidden="true" data-speed="-0.25" />
-      <Chapter about="the gate" n={5} />
       <div className="lp-lamps" aria-hidden="true">
         <i style={{ left: '12%', top: '30%' }} data-speed="0.12" />
         <i style={{ left: '78%', top: '18%' }} data-speed="-0.1" />

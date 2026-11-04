@@ -6,7 +6,6 @@ import SplitWords from '../components/SplitWords.jsx';
 import ImageSequence from '../components/ImageSequence.jsx';
 import { usePhoneSequence } from '../frames/usePhoneSequence.js';
 import { SEQ_HEIGHT, SEQ_WIDTH } from '../frames/phoneSequence.js';
-import Chapter from '../components/Chapter.jsx';
 
 const CAPTIONS = [
   ['Two taps to pay.', 'UPI or card, with a numbered receipt the moment it clears.'],
@@ -46,7 +45,6 @@ export default function Spin() {
   return (
     <section className="lp-spin" data-nav="light" ref={ref}>
       <div className="lp-spin-glow" aria-hidden="true" />
-      <Chapter about="the app" n={2} />
       <div className="lp-bigtype lp-spin-big" aria-hidden="true">₹13,004</div>
       <div className="lp-spin-head">
         <p className="lp-eyebrow">The resident app</p>

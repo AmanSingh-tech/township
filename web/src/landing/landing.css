@@ -23,10 +23,13 @@
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .lp { --lp-light: #14110f; --lp-white: #0f0d0c; --lp-ink: #f3f0eb; --lp-ink-2: #a8a29e; --lp-accent-fg: #e2b4e6; --lp-line: rgba(255, 255, 255, 0.09); }
-}
-:root[data-theme="dark"] .lp { --lp-light: #14110f; --lp-white: #0f0d0c; --lp-ink: #f3f0eb; --lp-ink-2: #a8a29e; --lp-accent-fg: #e2b4e6; --lp-line: rgba(255, 255, 255, 0.09); }
+/* The front page keeps its own fixed colours in both themes: each chapter has a set
+ * background, so its ink must not follow the device's dark mode. */
+.lp { color-scheme: light;
+  --t-lilac: #f1def5; --t-lilac-ink: #7b3f80; --t-peach: #fbe1cf; --t-peach-ink: #a4532a;
+  --t-butter: #f8ecc0; --t-butter-ink: #85650c; --t-sage: #dcebd3; --t-sage-ink: #3f6b3a;
+  --t-sky: #d9e6f8; --t-sky-ink: #2f5d93; --t-rose: #f8d9df; --t-rose-ink: #a23a4f;
+  --fg: #18181b; --muted: #71717a; }
 
 .lp-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .lp-anchor { display: block; height: 0; }
@@ -180,7 +183,6 @@
 .lp-hero-phone { --pw: clamp(230px, min(25vw, 34svh), 340px); margin-bottom: calc(var(--pw) * -2.067 + 40svh); }
 .lp-hero-glow { position: absolute; left: 50%; bottom: 10svh; width: 140vmin; height: 90vmin; margin-left: -70vmin; border-radius: 50%; background: radial-gradient(closest-side, rgba(214, 150, 222, 0.42), rgba(214, 150, 222, 0.1) 55%, transparent); pointer-events: none; }
 .lp-hero-copy { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; text-align: center; padding: calc(56px + 8svh) var(--lp-gutter) 0; gap: 18px; }
-.lp-hero-eyebrow { font-size: clamp(16px, 1.6vw, 21px); font-weight: 600; color: var(--lp-inv-2); letter-spacing: -0.01em; }
 .lp-display { color: #fff; }
 .lp-display .sw-i { background: linear-gradient(180deg, #ffffff 35%, #e6c9ea); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .lp-hero-lead { font-size: clamp(17px, 1.5vw, 22px); color: var(--lp-inv-2); max-width: 34ch; font-weight: 500; line-height: 1.45; letter-spacing: -0.012em; }
@@ -349,7 +351,6 @@
 .lp-h2 { font-size: clamp(42px, 5.4vw, 86px); line-height: 0.9; }
 .sw { padding-top: 0.06em; }
 
-.lp-chapter { position: absolute; z-index: 6; top: calc(56px + 16px); left: max(var(--lp-gutter), calc(50% - 580px)); right: max(var(--lp-gutter), calc(50% - 580px)); display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 500; letter-spacing: 0.01em; opacity: 0.62; pointer-events: none; }
 .lp-bigtype { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; white-space: nowrap; pointer-events: none; font-family: var(--lp-serif); line-height: 0.8; letter-spacing: -0.02em; }
 
 /* 02 · The app: lilac, with the amount due drifting behind the phone */
@@ -404,4 +405,4 @@
 .lp-story .lp-h2 { font-size: clamp(40px, 4.4vw, 74px); }
 .lp-story.is-animated .lp-steps { min-height: 400px; }
 .lp-step .lp-h2 { margin-bottom: 10px; }
-@media (max-width: 767px) { .lp-story.is-animated .lp-steps { min-height: 260px; } .lp-story .lp-h2 { font-size: clamp(32px, 9vw, 44px); } .lp-chapter { top: calc(56px + 10px); font-size: 11px; } }
+@media (max-width: 767px) { .lp-story.is-animated .lp-steps { min-height: 260px; } .lp-story .lp-h2 { font-size: clamp(32px, 9vw, 44px); } }

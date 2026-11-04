@@ -99,7 +99,7 @@ Warm and minimal, after OpenDesign's "Neutral Modern" structure, with a palette 
 - **Charts:** colours checked for colour-blind safety and contrast in both themes.
 - **Logo:** a T made from a tower between two shorter ones, with a sun.
 - **Front page** (`/welcome`): seven chapters, each in its own colour (night, lilac, paper, espresso, night, butter,
-  black) and labelled in its corners. Each arrives over the last: as a rounded sheet that slides up with a tilt, or through an
+  black). Each arrives over the last: as a rounded sheet that slides up with a tilt, or through an
   opening circle. Tall serif capitals (Instrument Serif, bundled), giant faded figures behind some chapters, a turning
   phone, and a sticky Sign in pill. Built with GSAP and loaded on its own, so the app carries none of it.
 

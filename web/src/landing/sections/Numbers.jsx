@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { useScene } from '../motion/useScene.js';
 import { countUp, fadeUp, parallax, revealWords, portalIn } from '../motion/effects.js';
-import Chapter from '../components/Chapter.jsx';
 import SplitWords from '../components/SplitWords.jsx';
 
 // Figures from the full-size load test (see the README).
@@ -29,7 +28,6 @@ export default function Numbers() {
   });
   return (
     <section className="lp-numbers" ref={ref} aria-label="In numbers">
-      <Chapter about="scale" n={4} />
       <div className="lp-bigtype lp-numbers-big" data-speed="-0.2" aria-hidden="true">2,400</div>
       <div className="lp-wrap">
         <div className="lp-numbers-head">

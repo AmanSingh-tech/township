@@ -9,7 +9,6 @@ import { Phone } from '../components/Devices.jsx';
 import { HomeScreen } from '../components/screens.jsx';
 import Icon from '../components/Icon.jsx';
 import { jumpTo } from '../components/Nav.jsx';
-import Chapter from '../components/Chapter.jsx';
 
 export default function Hero({ cta }) {
   const ref = useRef(null);
@@ -17,8 +16,7 @@ export default function Hero({ cta }) {
   useScene(ref, ({ el, q }) => {
     // Entrance: words rise, then the phone comes up out of the skyline.
     gsap.timeline({ delay: 0.15 })
-      .from(q('.lp-hero-eyebrow'), { autoAlpha: 0, y: 14, duration: 0.8 })
-      .from(q('.lp-display .sw-i'), { yPercent: 118, rotate: 5, transformOrigin: '0% 100%', duration: 1.3, stagger: 0.08, ease: 'expo.out' }, '<0.1')
+      .from(q('.lp-display .sw-i'), { yPercent: 118, rotate: 5, transformOrigin: '0% 100%', duration: 1.3, stagger: 0.08, ease: 'expo.out' })
       .from(q('.lp-hero-lead, .lp-hero-ctas'), { autoAlpha: 0, y: 22, duration: 1, stagger: 0.1 }, '<0.45')
       .from(q('.lp-hero-phone'), { yPercent: 34, scale: 0.9, autoAlpha: 0, duration: 1.8, ease: 'expo.out' }, '<-0.2')
       .from(q('.lp-hero-glow'), { scale: 0.4, autoAlpha: 0, duration: 2, ease: 'power2.out' }, '<')
@@ -46,9 +44,7 @@ export default function Hero({ cta }) {
         <div className="lp-float f3" data-speed="0.1" aria-hidden="true"><div className="lp-float-in"><i className="tint-peach"><Icon name="fix" /></i><span><b>Plumber on the way</b>Water leak · 2:40 pm</span></div></div>
       </div>
       <div className="lp-hero-fade" aria-hidden="true" />
-      <Chapter about="Township" n={1} />
       <div className="lp-hero-copy">
-        <p className="lp-hero-eyebrow">Township</p>
         <SplitWords as="h1" className="lp-display" text="Home, handled." />
         <p className="lp-hero-lead">Maintenance, complaints, visitors and the gate, in one calm app for every flat in the township.</p>
         <div className="lp-hero-ctas">
