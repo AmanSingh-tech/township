@@ -13,7 +13,7 @@ import { jumpTo } from '../components/Nav.jsx';
 export default function Hero({ cta }) {
   const ref = useRef(null);
 
-  useScene(ref, ({ el, q }) => {
+  useScene(ref, ({ el, q, mobile }) => {
     // Entrance: words rise, then the phone comes up out of the skyline.
     gsap.timeline({ delay: 0.15 })
       .from(q('.lp-display .sw-i'), { yPercent: 118, rotate: 5, transformOrigin: '0% 100%', duration: 1.3, stagger: 0.08, ease: 'expo.out' })
@@ -27,7 +27,7 @@ export default function Hero({ cta }) {
     gsap.timeline({ scrollTrigger: { trigger: el, start: 'top top', end: 'bottom top', scrub: 0.4 } })
       .to(q('.lp-hero-copy'), { yPercent: -22, autoAlpha: 0, ease: 'none' }, 0)
       .to(q('.lp-hero-device'), { yPercent: -18, scale: 1.06, ease: 'none' }, 0);
-    parallax(q('[data-speed]'), el);
+    if (!mobile) parallax(q('[data-speed]'), el);
   });
 
   return (

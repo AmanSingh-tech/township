@@ -13,4 +13,6 @@ export { gsap, ScrollTrigger };
 
 export const MOTION = '(prefers-reduced-motion: no-preference)';
 export const MOBILE = '(max-width: 767px)';
+// Touch screens scroll with momentum: no snapping, shorter pins, less lag (see the sections).
+export const isTouch = () => typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 export const prefersReducedMotion = () => typeof matchMedia === 'function' && !matchMedia(MOTION).matches;

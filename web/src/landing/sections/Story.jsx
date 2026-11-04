@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { gsap, prefersReducedMotion } from '../motion/gsap.js';
+import { gsap, prefersReducedMotion, isTouch } from '../motion/gsap.js';
 import { useScene } from '../motion/useScene.js';
 import { Phone } from '../components/Devices.jsx';
 import { PayScreen, FixScreen, VisitorScreen, BookScreen } from '../components/screens.jsx';
@@ -34,11 +34,12 @@ export default function Story() {
     const tl = gsap.timeline({
       defaults: { ease: 'power2.inOut' },
       scrollTrigger: {
-        trigger: el, start: 'top top', end: () => `+=${window.innerHeight * n * (mobile ? 0.8 : 1)}`,
-        pin: true, scrub: 0.8, invalidateOnRefresh: true,
+        trigger: el, start: 'top top', end: () => `+=${window.innerHeight * n * (mobile ? 0.6 : 1)}`,
+        pin: true, scrub: mobile ? 0.3 : 0.8, anticipatePin: 1, invalidateOnRefresh: true,
         // Nearest step, never skipping one: no inertia, which would fling a fast
         // scroll past the middle steps.
-        snap: { snapTo: 'labels', inertia: false, duration: { min: 0.25, max: 0.6 }, delay: 0.12, ease: 'power1.inOut' },
+        // No snapping on touch screens: it tugs against the swipe's momentum.
+        snap: (mobile || isTouch()) ? false : { snapTo: 'labels', inertia: false, duration: { min: 0.25, max: 0.6 }, delay: 0.12, ease: 'power1.inOut' },
         onUpdate: (self) => mark(Math.min(n - 1, Math.floor(self.progress * tl.duration() + 0.3))),
       },
     });

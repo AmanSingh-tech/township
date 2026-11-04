@@ -11,11 +11,11 @@ import { GateScreen } from '../components/screens.jsx';
 // which tips up from flat as it scrolls into place.
 export default function Gate() {
   const ref = useRef(null);
-  useScene(ref, ({ el, q }) => {
+  useScene(ref, ({ el, q, mobile }) => {
     sheetIn(el);
     revealWords(q('.lp-h'), { trigger: el, start: 'top 65%' });
     fadeUp(q('.lp-gate-copy .lp-lead, .lp-gate-facts li'), { trigger: el, start: 'top 55%', delay: 0.3, stagger: 0.08 });
-    parallax(q('[data-speed]'), el);
+    if (!mobile) parallax(q('[data-speed]'), el);
     const tablet = q('.lp-tablet')[0];
     gsap.fromTo(tablet, { rotateX: 32, yPercent: 22, scale: 0.86 }, {
       rotateX: 0, yPercent: 0, scale: 1, ease: 'none',

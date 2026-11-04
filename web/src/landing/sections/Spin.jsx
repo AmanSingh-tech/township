@@ -25,7 +25,7 @@ export default function Spin() {
     const turn = { p: 0 };
     const tl = gsap.timeline({
       defaults: { ease: 'power2.inOut' },
-      scrollTrigger: { trigger: el, start: 'top top', end: () => `+=${window.innerHeight * (mobile ? 2.2 : 2.8)}`, pin: true, scrub: 0.7, invalidateOnRefresh: true },
+      scrollTrigger: { trigger: el, start: 'top top', end: () => `+=${window.innerHeight * (mobile ? 1.5 : 2.8)}`, pin: true, scrub: mobile ? 0.3 : 0.7, anticipatePin: 1, invalidateOnRefresh: true },
     });
     tl.to(turn, { p: 1, ease: 'none', duration: 10, onUpdate: () => seq.current?.seek(turn.p) }, 0)
       // The phone rises from below the heading, and the heading clears out

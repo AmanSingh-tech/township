@@ -17,8 +17,8 @@ const fmt = (v, dec = 0) => v.toLocaleString('en-IN', { minimumFractionDigits: d
 export default function Numbers() {
   const ref = useRef(null);
   useScene(ref, ({ el, q, mobile }) => {
-    portalIn(el);
-    parallax(q('.lp-numbers-big'), el);
+    // The opening circle repaints the whole chapter each frame: desktop only.
+    if (!mobile) { portalIn(el); parallax(q('.lp-numbers-big'), el); }
     revealWords(q('.lp-h'), { trigger: el, start: 'top 75%' });
     fadeUp(q('.lp-numbers-head .lp-lead'), { trigger: el, start: 'top 70%', delay: 0.3 });
     // Children fade in; the stat itself carries the parallax, so they never fight over y.
