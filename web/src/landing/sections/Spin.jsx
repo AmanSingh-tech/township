@@ -54,7 +54,7 @@ export default function Spin() {
       </div>
       <ul className="lp-caps">
         {CAPTIONS.map(([t, s], i) => (
-          <li className={`lp-cap c${i}`} key={t}><b>{t}</b><span>{s}</span></li>
+          <li className={`lp-cap c${i}`} key={t}><b><i className={`lp-cap-dot d${i}`} aria-hidden="true" />{t}</b><span>{s}</span></li>
         ))}
       </ul>
     </section>

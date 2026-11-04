@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 // A row of towers with lit windows, generated from a seed so it is the same on
 // every visit. Several rows at different depths make the parallax layers.
+// `windows` is one colour or a list (one per window pattern), for a mixed glow.
 function rng(seed) {
   let a = seed >>> 0;
   return () => {
@@ -28,7 +29,7 @@ export default function Skyline({ seed = 1, color, windows = 'rgba(255,214,150,0
       <defs>
         {[0, 1, 2].map((o) => (
           <pattern key={o} id={`${id}-${o}`} width="16" height="20" patternUnits="userSpaceOnUse" x={o * 5} y={o * 7}>
-            <rect x="4" y="5" width="6" height="8" rx="1" fill={windows} />
+            <rect x="4" y="5" width="6" height="8" rx="1" fill={Array.isArray(windows) ? windows[o % windows.length] : windows} />
           </pattern>
         ))}
       </defs>

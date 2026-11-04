@@ -33,7 +33,7 @@ export default function Numbers() {
         </div>
         <div className="lp-stats">
           {STATS.map((s, i) => (
-            <div className="lp-stat" key={s.label} data-speed={i % 3 === 1 ? '0.06' : undefined}>
+            <div className={`lp-stat c${i}`} key={s.label} data-speed={i % 3 === 1 ? '0.06' : undefined}>
               <p className="lp-stat-v"><span data-value={s.v} data-decimals={s.dec || 0}>{fmt(s.v, s.dec)}</span>{s.unit && <small>{s.unit}</small>}</p>
               <p className="lp-stat-l">{s.label}</p>
             </div>

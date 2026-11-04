@@ -5,10 +5,10 @@ import { Phone } from '../components/Devices.jsx';
 import { PayScreen, FixScreen, VisitorScreen, BookScreen } from '../components/screens.jsx';
 
 const STEPS = [
-  { tab: 'Pay', title: 'Dues, paid\nbefore dinner.', body: 'See exactly what is owed and why, pay by UPI or card, and keep every receipt in one place. Interest is shown, never hidden.', Screen: PayScreen, glow: '#d9a3e0' },
-  { tab: 'Fix', title: 'Report it once.\nWatch it get fixed.', body: 'Snap the leak. It goes to the right technician for your tower, you follow every step, then rate the fix or reopen it.', Screen: FixScreen, glow: '#e6b07c' },
-  { tab: 'Visitors', title: 'Know who is\nat the gate.', body: 'Approve or turn away a visitor from wherever you are, or send a guest a code before they arrive.', Screen: VisitorScreen, glow: '#b9c7a3' },
-  { tab: 'Book', title: 'The clubhouse,\nwithout the calls.', body: 'Pick a slot, see the fee and the cancellation cut-off, and it is added to your maintenance bill.', Screen: BookScreen, glow: '#c7a6ee' },
+  { tab: 'Pay', title: 'Dues, paid\nbefore dinner.', body: 'See exactly what is owed and why, pay by UPI or card, and keep every receipt in one place. Interest is shown, never hidden.', Screen: PayScreen, glow: '#d58fdf' },
+  { tab: 'Fix', title: 'Report it once.\nWatch it get fixed.', body: 'Snap the leak. It goes to the right technician for your tower, you follow every step, then rate the fix or reopen it.', Screen: FixScreen, glow: '#f4a06e' },
+  { tab: 'Visitors', title: 'Know who is\nat the gate.', body: 'Approve or turn away a visitor from wherever you are, or send a guest a code before they arrive.', Screen: VisitorScreen, glow: '#7fcb93' },
+  { tab: 'Book', title: 'The clubhouse,\nwithout the calls.', body: 'Pick a slot, see the fee and the cancellation cut-off, and it is added to your maintenance bill.', Screen: BookScreen, glow: '#7eaef0' },
 ];
 
 const Lines = ({ text }) => text.split('\n').map((l, i) => <span key={i} className="lp-line">{l}</span>);
@@ -86,7 +86,7 @@ export default function Story() {
           <div className="lp-steps">
             {STEPS.map(({ tab, title, body, Screen }, i) => (
               <article className="lp-step" id={`lp-step-${i}`} key={tab}>
-                <p className="lp-eyebrow">{String(i + 1).padStart(2, '0')} · {tab}</p>
+                <p className="lp-eyebrow"><span className="lp-step-dot" style={{ background: STEPS[i].glow }} />{String(i + 1).padStart(2, '0')} · {tab}</p>
                 <h2 className="lp-h2"><Lines text={title} /></h2>
                 <p className="lp-lead">{body}</p>
                 <Phone className="lp-step-phone"><Screen /></Phone>

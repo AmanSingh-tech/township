@@ -28,7 +28,7 @@ export default function Closing({ cta, demo }) {
         </div>
         <div className="lp-roles">
           {ROLES.map(([t, s, to]) => (
-            <Link className="lp-role" to={to} key={t}><b>{t}</b><span>{s}</span><Icon name="arrow" /></Link>
+            <Link className={`lp-role r${ROLES.findIndex((r) => r[0] === t)}`} to={to} key={t}><b>{t}</b><span>{s}</span><Icon name="arrow" /></Link>
           ))}
         </div>
       </div>
