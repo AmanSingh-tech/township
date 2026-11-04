@@ -20,12 +20,12 @@ const isMacSafari = () => /Macintosh/.test(navigator.userAgent) && /Safari/.test
 const DISMISS = 'township.installDismissed';
 const dismissedRecently = () => { try { return Date.now() - Number(localStorage.getItem(DISMISS) || 0) < 14 * 864e5; } catch { return false; } };
 
-// mode: 'prompt' (a button works), 'ios' or 'mac' (show steps), or null (installed, or a
-// browser that cannot install web apps, such as Firefox on a desktop).
+// mode: 'prompt' (a button works), 'ios' or 'mac' (Safari's steps), 'manual' (no prompt
+// yet, or a browser without one: general steps), or null (already running installed).
 export function useInstall() {
   const [, tick] = useState(0);
   useEffect(() => { const fn = () => tick((n) => n + 1); listeners.add(fn); return () => listeners.delete(fn); }, []);
-  const mode = isStandalone() ? null : deferred ? 'prompt' : isIos() ? 'ios' : isMacSafari() ? 'mac' : null;
+  const mode = isStandalone() ? null : deferred ? 'prompt' : isIos() ? 'ios' : isMacSafari() ? 'mac' : 'manual';
   return {
     mode,
     dismissed: dismissedRecently(),

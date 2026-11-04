@@ -7,11 +7,16 @@ import InstallButton from '../../InstallButton.jsx';
 
 export default function StickyCta({ cta }) {
   const [show, setShow] = useState(false);
+  // Shown between the hero and the closing chapter, which have their own buttons.
   useEffect(() => {
-    const hero = document.querySelector('.lp-hero');
+    const hero = document.querySelector('.lp-hero'), end = document.querySelector('.lp-closing');
     if (!hero || typeof IntersectionObserver === 'undefined') return undefined;
-    const io = new IntersectionObserver(([e]) => setShow(!e.isIntersecting), { threshold: 0.15 });
-    io.observe(hero);
+    const seen = { hero: true, end: false };
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) seen[e.target === hero ? 'hero' : 'end'] = e.isIntersecting;
+      setShow(!seen.hero && !seen.end);
+    }, { threshold: 0.15 });
+    io.observe(hero); if (end) io.observe(end);
     return () => io.disconnect();
   }, []);
   return (

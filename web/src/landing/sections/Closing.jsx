@@ -5,6 +5,7 @@ import { fadeUp, revealWords } from '../motion/effects.js';
 import SplitWords from '../components/SplitWords.jsx';
 import Icon from '../components/Icon.jsx';
 import { LOGO } from '../../brand.js';
+import InstallButton from '../../InstallButton.jsx';
 
 const ROLES = [
   ['Residents', 'Pay, report, approve visitors, book.', '/login'],
@@ -25,7 +26,10 @@ export default function Closing({ cta, demo }) {
         <img className="lp-closing-logo" src={LOGO} alt="" />
         <SplitWords as="h2" className="lp-h" text="Your township is ready." />
         <div className="lp-closing-ctas">
-          <Link className="lp-btn lg" to={cta.to}>{cta.label}</Link>
+          <div className="row" style={{ gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link className="lp-btn lg" to={cta.to}>{cta.label}</Link>
+            <InstallButton variant="lg" className="lp-install-lg" />
+          </div>
           {demo && <p className="lp-note">This is a demo with a sample township. Sign-in codes appear on screen and payments are test payments.</p>}
         </div>
         <div className="lp-roles">
@@ -36,7 +40,7 @@ export default function Closing({ cta, demo }) {
       </div>
       <footer className="lp-foot lp-wrap">
         <span>Township · society management for a 2,400-flat township</span>
-        <nav aria-label="Footer"><Link to="/login">Sign in</Link><Link to="/gate">Gate tablet</Link><Link to="/gate-notice">Privacy notice</Link></nav>
+        <nav aria-label="Footer"><Link to="/login">Sign in</Link><InstallButton variant="link" className="lp-foot-install" /><Link to="/gate">Gate tablet</Link><Link to="/gate-notice">Privacy notice</Link></nav>
       </footer>
     </section>
   );

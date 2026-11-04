@@ -11,7 +11,7 @@ export default function InstallCard({ dismissible = true }) {
   const toast = useToast();
   const { mode, dismissed, install, dismiss } = useInstall();
   const [steps, setSteps] = useState(false);
-  if (!mode || (dismissible && dismissed)) return null;
+  if (!mode || mode === 'manual' || (dismissible && dismissed)) return null;
   return (
     <div className="install-card">
       <img src={LOGO} alt="" />

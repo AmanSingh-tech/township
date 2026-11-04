@@ -406,3 +406,7 @@
 .lp-story.is-animated .lp-steps { min-height: 400px; }
 .lp-step .lp-h2 { margin-bottom: 10px; }
 @media (max-width: 767px) { .lp-story.is-animated .lp-steps { min-height: 260px; } .lp-story .lp-h2 { font-size: clamp(32px, 9vw, 44px); } }
+.lp-install-lg > button { color: var(--lp-inv); box-shadow: inset 0 0 0 1.5px rgba(236, 210, 243, 0.55); }
+.lp-install-lg > button:hover { background: rgba(236, 210, 243, 0.12); }
+.lp-foot-install > button { color: var(--lp-inv-2); }
+.lp-foot-install > button:hover { color: var(--lp-inv); text-decoration: none; }

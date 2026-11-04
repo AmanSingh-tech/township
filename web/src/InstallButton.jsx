@@ -8,9 +8,9 @@ import { Icon, useToast } from './ui.jsx';
 import { useInstall } from './install.js';
 
 export function InstallSteps({ mode, t }) {
-  return mode === 'mac'
-    ? <ol className="install-steps tiny"><li>{t('macStep')}</li></ol>
-    : <ol className="install-steps tiny"><li>{t('iosStep1')}</li><li>{t('iosStep2')}</li></ol>;
+  if (mode === 'mac') return <ol className="install-steps tiny"><li>{t('macStep')}</li></ol>;
+  if (mode === 'manual') return <ol className="install-steps tiny"><li>{t('manualStep1')}</li><li>{t('manualStep2')}</li></ol>;
+  return <ol className="install-steps tiny"><li>{t('iosStep1')}</li><li>{t('iosStep2')}</li></ol>;
 }
 
 export default function InstallButton({ variant = 'pill', className = '' }) {
@@ -34,11 +34,11 @@ export default function InstallButton({ variant = 'pill', className = '' }) {
   return (
     <span className={`install-btn ${variant} ${className}`} ref={ref}>
       <button type="button" onClick={onClick} aria-expanded={mode === 'prompt' ? undefined : open} aria-label={variant === 'icon' ? t('installApp') : undefined} title={t('installApp')}>
-        <Icon name="download" size={variant === 'side' ? 18 : 16} />{variant !== 'icon' && <span>{t('installApp')}</span>}
+        {variant !== 'link' && <Icon name="download" size={variant === 'side' ? 18 : variant === 'lg' ? 18 : 16} />}{variant !== 'icon' && <span>{t('installApp')}</span>}
       </button>
       {open && (
         <div className="install-pop" role="dialog" aria-label={t('installApp')}>
-          <b>{mode === 'mac' ? t('installApp') : t('installTitle')}</b>
+          <b>{mode === 'ios' ? t('installTitle') : t('installApp')}</b>
           <InstallSteps mode={mode} t={t} />
         </div>
       )}
