@@ -32,7 +32,7 @@ export default function InstallButton({ variant = 'pill', className = '' }) {
     if (mode === 'prompt') { if (await install()) toast(t('installed')); } else setOpen((v) => !v);
   }
   return (
-    <span className={`install-btn ${variant} ${className}`} ref={ref}>
+    <span className={`install-btn ib-${variant} ${className}`} ref={ref}>
       <button type="button" onClick={onClick} aria-expanded={mode === 'prompt' ? undefined : open} aria-label={variant === 'icon' ? t('installApp') : undefined} title={t('installApp')}>
         {variant !== 'link' && <Icon name="download" size={variant === 'side' ? 18 : variant === 'lg' ? 18 : 16} />}{variant !== 'icon' && <span>{t('installApp')}</span>}
       </button>
