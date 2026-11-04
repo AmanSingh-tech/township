@@ -6,6 +6,7 @@ import { useT, LANGS } from '../../i18n.jsx';
 import { useApi, useToast, Icon, Sheet } from '../../ui.jsx';
 import { ThemeSwitch } from '../../theme.jsx';
 import { date } from '../../format.js';
+import InstallCard from './InstallCard.jsx';
 
 export default function Profile() {
   const { t, lang, setLang } = useT();
@@ -60,6 +61,7 @@ export default function Profile() {
         <div style={{ fontWeight: 600, fontSize: 17 }}>{me.name}</div>
         <div className="faint small">{me.flat_id} · {me.relation} · {me.phone}</div>
       </section>
+      <InstallCard dismissible={false} />
       <section className="stack" style={{ gap: 8 }}>
         <span className="label">{t('language')}</span>
         <div className="chips">{LANGS.map(([k, l]) => <button key={k} className={`chip ${lang === k ? 'on' : ''}`} onClick={() => changeLang(k)}>{l}</button>)}</div>

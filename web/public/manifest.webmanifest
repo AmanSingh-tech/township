@@ -1,12 +1,29 @@
 {
+  "id": "/",
   "name": "Township",
   "short_name": "Township",
-  "description": "Pay maintenance, raise complaints and approve visitors.",
+  "description": "Pay maintenance, raise complaints, approve visitors and book the clubhouse.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#fafaf8",
   "theme_color": "#fafaf8",
+  "categories": ["lifestyle", "utilities"],
   "icons": [
-    { "src": "/icon.svg?v=3", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg?v=3", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Pay maintenance", "short_name": "Pay", "url": "/bills", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Report a problem", "short_name": "Report", "url": "/complaints/new", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Create a guest code", "short_name": "Guest code", "url": "/visitors?new=1", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ],
+  "screenshots": [
+    { "src": "/screenshots/phone-home.jpg", "sizes": "390x844", "type": "image/jpeg", "form_factor": "narrow", "label": "Dues, complaints and visitors at a glance" },
+    { "src": "/screenshots/desk-report.jpg", "sizes": "1280x800", "type": "image/jpeg", "form_factor": "wide", "label": "The committee report" }
   ]
 }

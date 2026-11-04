@@ -14,6 +14,7 @@ import '@fontsource/noto-sans-devanagari/devanagari-500.css';
 import '@fontsource/noto-sans-devanagari/devanagari-600.css';
 import '@fontsource/noto-sans-devanagari/devanagari-700.css';
 import './styles.css';
+import './install.js'; // catches the browser's install prompt as early as possible
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

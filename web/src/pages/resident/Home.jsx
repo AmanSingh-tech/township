@@ -7,6 +7,7 @@ import { inr, date, ago, time } from '../../format.js';
 import { useApi, usePoll, Skeleton, Empty, Icon, useToast, STATUS_TONE } from '../../ui.jsx';
 import { CountUp, CategoryBadge, Avatar, LabelledSteps } from './parts.jsx';
 import PaySheet from './PaySheet.jsx';
+import InstallCard from './InstallCard.jsx';
 
 export default function Home() {
   const { t } = useT();
@@ -78,6 +79,8 @@ export default function Home() {
             : <button key={q.label} type="button" className="quick-item" onClick={q.onClick}>{inner}</button>;
         })}
       </nav>
+
+      <InstallCard />
 
       {push === 'off' && (
         <div className="card row between" style={{ gap: 12 }}>

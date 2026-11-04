@@ -621,3 +621,11 @@ textarea.input { height: auto; min-height: 110px; padding: 12px 14px; resize: ve
 .goal-bar { display: block; height: 6px; border-radius: 3px; background: color-mix(in oklab, var(--fg), transparent 90%); overflow: hidden; }
 .goal-bar i { display: block; height: 100%; border-radius: 3px; background: var(--chart-1); }
 .goal.met .goal-bar i { background: var(--success); }
+
+/* Install card */
+.install-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border-radius: 16px; background: var(--surface); border: 1px solid color-mix(in oklab, var(--accent-fg), transparent 70%); box-shadow: inset 3px 0 0 var(--accent-fg); color: var(--fg); }
+.install-card img { width: 40px; height: 40px; border-radius: 10px; flex: none; }
+.install-card b { display: block; font-weight: 600; margin-bottom: 2px; }
+.install-card .tiny { color: var(--muted); }
+.install-actions { display: flex; gap: 4px; align-items: center; }
+.install-steps { margin: 6px 0 0; padding-left: 18px; }
