@@ -42,7 +42,7 @@ classifier gets 81% of categories right and is right every time it says it is su
 false alarms. On five realistic month-end statements (140 credits), **no credit is posted to the wrong flat**, 55% post
 themselves, and matching takes about 88% less time than by hand (the brief's target is 80%).
 
-**Tested:** 53 server tests and 6 browser tests, plus a full-size load test (2,400 flats, 95% of requests under 28 ms at
+**Tested:** 62 server tests and 6 browser tests (they pass from a clean clone), plus a full-size load test (2,400 flats, 95% of requests under 28 ms at
 five times the bill-day peak).
 
 ## Runs free

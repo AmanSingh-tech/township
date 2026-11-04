@@ -25,7 +25,9 @@ Nothing to install. Open **https://township-91vm.onrender.com/welcome** in any b
 
 The live site is on Render's free plan. A scheduled ping keeps it awake, but if it was asleep, the first visit takes up
 to a minute; refresh once. Data changed by one reviewer is visible to the next, because it is one shared demo township.
-To start from a clean township, run it locally (section 3).
+To start from a clean township, sign in as admin (`9000000005`) → **Admin** → **Reset demo data** → confirm. It puts
+the sample township back as it was, signs everyone out, and is recorded in the audit log; anyone using the app at that
+moment sees "Resetting demo data, try again in a moment" for the few seconds it takes.
 
 ## 1. Five-minute tour of the core build
 
@@ -65,7 +67,7 @@ number can request 15 codes an hour (3 in production).
 | Help desk: Priya Patil | `9000000001` | Complaints queue: count tiles, category change, assignment, status, linked duplicates. |
 | Accounts: Meena Kulkarni | `9000000004` | Bank matching, flats and bills, bill runs, register import, Tally export. |
 | Committee: Rajan Gokhale | `9000000002` | Committee report; approve a bill run; sign off a month. |
-| Admin | `9000000005` | Approvals (second person), settings, staff, technicians, gate tablets, amenities, notices, messages, data requests, audit log. |
+| Admin | `9000000005` | **Reset demo data** (top of the Admin page), approvals (second person), settings, staff, technicians, gate tablets, amenities, notices, messages, data requests, audit log. |
 | Guard (gate tablet) | `9000000003`, PIN `2468` | Needs a paired tablet, below. |
 
 **Gate tablet:** sign in as admin → Admin → Gate tablets → register a tablet and note the 8-digit pairing code. Open
@@ -112,7 +114,7 @@ npm run dev                                                        # API :4000, 
 ```
 
 ```bash
-npm test             # 53 server tests: billing, interest, matching, complaints, roles, security, evaluation floors
+npm test             # 62 server tests: billing, interest, matching, reconciliation safety, complaints, roles, demo reset, evaluation floors
 npm run eval         # scores complaint triage and bank matching; writes docs/evaluation.md
 npm run test:e2e     # 6 browser tests (needs Chrome; set CHROME_PATH if it is not /usr/bin/google-chrome)
 npm run load:seed && npm run load:run      # optional: full-size load test, 2,400 flats
@@ -189,6 +191,7 @@ local run.
 
 ## 8. Limits of the demo
 
+- Reviewers share one demo township on the live app; an admin can reset it (section 0).
 - The live app is on Render's free plan: it sleeps after 15 idle minutes, photos uploaded there are lost when it
   restarts, and the free database expires after 30 days.
 - Payments, SMS and WhatsApp are not real. Payments and SMS follow the real providers' steps behind a labelled

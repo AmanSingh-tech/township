@@ -29,6 +29,7 @@
   .qa { margin: 0 0 3mm; break-inside: avoid; }
   .qa b { display: block; margin-bottom: 0.6mm; }
   .muted { color: #666; }
+  .note { border-left: 2px solid #1a1a1a; padding: 0.5mm 0 0.5mm 3.5mm; margin: 2mm 0 3mm; break-inside: avoid; }
   .diagram { margin: 2mm 0 3mm; text-align: center; break-inside: avoid; }
   .diagram svg { max-width: 100% !important; max-height: 95mm; height: auto; }
   .flows .diagram svg { max-height: 125mm; }
@@ -38,9 +39,7 @@
   figure img { width: 100%; display: block; border: 1px solid #ccc; }
   figcaption { font-size: 8.2pt; color: #444; margin-top: 1.2mm; }
   .two { display: grid; grid-template-columns: 0.42fr 1fr; gap: 4mm; align-items: start; }
-  .part { font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: #666; margin: 9mm 0 0; }
-  .break { break-before: page; }
-  .ok { white-space: nowrap; }
+  .m { font-size: 7.6pt; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #666; }
 </style>
 </head>
 <body>
@@ -48,101 +47,98 @@
 <h1>Township: Technical Design Document</h1>
 <table class="meta">
   <tr><td>Repository</td><td><a href="https://github.com/AmanSingh-tech/township">https://github.com/AmanSingh-tech/township</a></td></tr>
-  <tr><td>Live app</td><td><a href="https://township-91vm.onrender.com/welcome">https://township-91vm.onrender.com/welcome</a>. Demo sign-ins are listed on the sign-in page; codes appear on screen because SMS is mocked. Running it locally and every login are in deployment.md.</td></tr>
+  <tr><td>Live app</td><td><a href="https://township-91vm.onrender.com/welcome">https://township-91vm.onrender.com/welcome</a>. Demo sign-ins are listed on the sign-in page; codes appear on screen because SMS is mocked. Running it locally, every login and the demo reset are in deployment.md.</td></tr>
   <tr><td>Client</td><td>Company A, Pune: a gated township of 2,400 flats in 28 towers</td></tr>
   <tr><td>Author, date</td><td>Aman Kumar Singh, 5 November 2026</td></tr>
 </table>
-<p class="muted">How to read this: Part A is what was built and why, Part B is how it works inside (low-level design, concurrency, scaling), Part C answers the questions a reviewer is likely to ask. Every assumption is labelled A1–A12 in section 3.</p>
+<p class="muted">Figures marked <span class="m">measured</span> come from tests or the evaluation and can be reproduced with the commands in section 8; figures marked <span class="m">target</span> are the brief's goals or design aims. Assumptions are labelled A1–A12 (section 1.3). Appendix A checks the assignment point by point; Appendix B answers likely questions.</p>
 
-<h2>0. The assignment, point by point</h2>
+<h2>1. Executive summary and the client's problem</h2>
+<p>Company A runs a 2,400-flat township whose money and operations live in Excel, phone calls, 28 WhatsApp groups and paper gate registers. Township replaces those with one web app: residents pay maintenance, raise complaints and approve visitors from their phones; bank statements match themselves where the evidence is clear and wait for a person where it is not; the committee gets a monthly report built from an append-only ledger. The core build (resident login, bills with test payment, bank matching, complaints with assignment and status, the committee view) works end to end on the brief's sample data, is live, and is backed by 62 server tests, 6 browser tests and a reproducible evaluation.</p>
 <table>
-  <tr><th style="width:36%">The assignment asks for</th><th>Where it is met</th></tr>
-  <tr><td>The core build working end to end</td><td>All 8 core screens on the brief's sample data (section 2.1); the brief's three flats reproduce its table exactly, and a test checks them</td></tr>
-  <tr><td>Main flows on realistic sample data; no dead buttons</td><td>A sample township (the brief's 3 flats plus about 60 more, with bills, payments, complaints, visitors, bookings and notices) loads on first start; 6 browser tests click through the main flows and fail on any page error</td></tr>
-  <tr><td>Frontend, backend, database, sign-in, roles</td><td>React app, Node and Express API, PostgreSQL; one-time-code sign-in; 6 roles, checked on every route (section 9)</td></tr>
-  <tr><td>The AI part works, including when wrong or unsure</td><td>Claude or a local model for category and urgency; a safety rule above both; "unsure" flagged below 60% confidence; one-tap correction; measured on 90 labelled complaints (section 7)</td></tr>
-  <tr><td>Polished UI: consistent, works on a phone, loading, empty and error states</td><td>One design system for phone, desk, gate tablet and front page; phone-first with a desktop layout; shared skeleton, empty and error components (section 8)</td></tr>
-  <tr><td>Tests for the key logic; no secrets; validated inputs; access control</td><td>53 server and 6 browser tests, an evaluation suite, a load test (section 10); only <code>.env.example</code> is committed; every route validates input and declares its roles (section 9)</td></tr>
-  <tr><td>TDD: GitHub URL, live link, architecture and why, data model, flows, AI, UI decisions, cuts and next</td><td>This document: sections 4, 5, 6, 7, 8 and 14</td></tr>
-  <tr><td>deployment.md: run locally, how it is deployed, environment variable names, demo logins</td><td>deployment.md, sections 1–6</td></tr>
-  <tr><td>Use only the brief; label every assumption</td><td>Section 3 separates what the brief gives from A1–A12</td></tr>
-  <tr><td>Keep the commit history; no secrets or real personal data</td><td>Every change is its own described commit; all names, numbers and UPI IDs in the sample data are invented</td></tr>
+  <tr><th style="width:44%">Result</th><th style="width:18%">Measured</th><th>How</th></tr>
+  <tr><td>Bank credits posted to the wrong flat</td><td>0 of 140</td><td>Evaluation: 5 realistic statements with known flats</td></tr>
+  <tr><td>Payment matching time, against by hand</td><td>−88%</td><td>Same evaluation; the brief's target is −80% (section 5.3)</td></tr>
+  <tr><td>Complaint category right; right when the model says it is sure</td><td>81%; 100%</td><td>90 labelled complaints in English, Hindi, Marathi, Hinglish</td></tr>
+  <tr><td>Safety hazards escalated; false alarms</td><td>14 of 14; 0</td><td>Same complaint set</td></tr>
+  <tr><td>Requests at five times the bill-day peak, 95th percentile</td><td>under 28 ms</td><td>Load test at full size; hardware in section 8</td></tr>
 </table>
 
-<p class="part">Part A · What was built, and why</p>
-
-<h2>1. The client's problem, and how the product answers it</h2>
-<p>Bills are made in Excel and emailed, payments are matched by hand before Tally, complaints arrive by phone and 28 WhatsApp groups, visitors go into paper registers at 4 gates, and the clubhouse is booked on a spreadsheet. The brief costs this at <b>₹83.57 lakh a year</b> and sets three six-month targets. Each target drove a design decision:</p>
+<h3>1.1 The client's costs and targets, and what answers them</h3>
 <table>
-  <tr><th style="width:26%">Brief's cost and target</th><th style="width:42%">What in the product addresses it</th><th>Where the committee sees it</th></tr>
-  <tr><td>₹64.8 lakh never collected; on-time payments 70% → 90%</td><td>Dues are the first thing on the home screen, with the reason; paying takes two taps; residents are alerted when bills issue; interest is shown, never a surprise</td><td>"Paid by due date" against 90%, and dues ageing</td></tr>
-  <tr><td>₹8.64 lakh of staff time matching; matching time −80%</td><td>Credits with a flat number or registered UPI ID post themselves; the rest arrive sorted, with evidence and the three best flats; re-uploads are harmless; UPI IDs are learned</td><td>"Received, not yet identified"; the evaluation measures 88% less time (section 7)</td></tr>
-  <tr><td>₹10.13 lakh of reopened complaints; reopened 25% → under 8%</td><td>The right technician from the start, a response timer, every step visible to the resident, duplicates linked into one job, closure only with the resident's rating</td><td>"Reopened" against 8%, first response and resolution times</td></tr>
+  <tr><th style="width:27%">Brief's cost and target</th><th style="width:43%">What in the product addresses it</th><th>Where the committee sees it</th></tr>
+  <tr><td>₹64.8 lakh never collected; on-time payments 70% → 90%</td><td>Dues first on the home screen, with the reason; paying in two taps; alerts when bills issue; interest shown, never a surprise</td><td>"On-time payments" against 90%</td></tr>
+  <tr><td>₹8.64 lakh of staff time matching; matching time −80%</td><td>Credits with strong evidence post themselves; the rest arrive with evidence and the best three flats; re-uploads are harmless; UPI IDs are learned</td><td>"Payment matching time" against 20% of the time by hand</td></tr>
+  <tr><td>₹10.13 lakh of reopened complaints; reopened 25% → under 8%</td><td>The right technician from the start, a response timer, every step visible to the resident, duplicates linked into one job, closure only with the resident's rating</td><td>"Reopened complaints" against 8%</td></tr>
 </table>
 
-<h2>2. Scope</h2>
-<h3>2.1 The core build: 8 screens, end to end</h3>
+<h3>1.2 Scope</h3>
+<p><b>The core build</b> is the priority and is held to the highest bar (sections 2, 3, 5, 6). <b>The rest of the brief's "must have"</b> (gate, amenity booking, notices, family members, the installable app) is built as optional depth, tested but secondary (section 9). <b>Out of scope</b>, as the brief says: accounting beyond maintenance (Tally stays, and the app exports to it), CCTV and barriers, a marketplace.</p>
+
+<h3>1.3 Assumptions</h3>
+<p>Given by the brief, so not assumptions: ₹6.50 per sq ft a month; the three sample flats; late fees under the bye-laws; visitor photos deleted after 90 days with a gate notice; English, Marathi and Hindi; mocked payments and messages; most bills paid in the first 10 days. Where the brief is silent, I chose; each choice is a setting or one function:</p>
 <table>
-  <tr><th style="width:24%">Screen</th><th style="width:12%">Role</th><th>What it does</th></tr>
+  <tr><th style="width:6%">#</th><th style="width:54%">Assumption</th><th>Why</th></tr>
+  <tr><td>A1</td><td>"Days overdue" counts from the oldest unpaid due date, so T12-0408 (47 days) also owes the next month.</td><td>The only reading where the sample row and a monthly bill agree</td></tr>
+  <tr><td>A2</td><td>Late fee means simple interest on overdue principal; payments clear interest first, then the oldest bill. The 21% a year used is a configurable demonstration rate; the actual applicable rate must be confirmed against the federation's adopted bye-laws before production.</td><td>The brief says only "late fees per bye-laws"; simple interest on principal avoids interest on interest</td></tr>
+  <tr><td>A3</td><td>Bills are raised on the 1st and due on the 10th; opening arrears carry no interest in the app.</td><td>Matches the payment pattern; old arrears' interest cannot be recomputed reliably</td></tr>
+  <tr><td>A4</td><td>Bank statements are CSV exports; UPI narrations carry the payer name, UPI ID and UTR, sometimes a flat number.</td><td>How HDFC, SBI and ICICI exports look; columns are found by heading</td></tr>
+  <tr><td>A5</td><td>A credit posts automatically only on a flat number or registered UPI ID, a score of 80+, a lead of 30 over the next flat, and no rival strong evidence.</td><td>The brief: unclear payments are never posted automatically</td></tr>
+  <tr><td>A6</td><td>Response targets: 15 min critical, 2 h high, 8 h medium, 24 h low; one duty-manager number.</td><td>A starting point the admin can change</td></tr>
+  <tr><td>A7</td><td>Roles beyond the core two: accounts, committee, admin, guard.</td><td>The other must-haves, and "the committee approves", need them</td></tr>
+  <tr><td>A8</td><td>Money decisions need two different people: bill runs, manual posts, adjustments, login-number changes.</td><td>What makes a report trustworthy to a committee</td></tr>
+  <tr><td>A9</td><td>Receipts are numbered without gaps per financial year: <code>RCT/2026-27/00001</code>.</td><td>Indian practice; auditors look for gaps</td></tr>
+  <tr><td>A10</td><td>Each of the 4 gates has one tablet, paired once; guards share tablets and sign in with a PIN.</td><td>One point of entry per gate today</td></tr>
+  <tr><td>A11</td><td>One server is enough for one township: about 8 requests a second at the bill-day peak.</td><td>2,400 flats, most paying in 10 days</td></tr>
+  <tr><td>A12</td><td>Matching time: 2 minutes to match a credit by hand; with the app, 0 for one it posted, 0.5 to confirm a right top suggestion, 2 when the suggestion was wrong or the credit still waits. Also the evaluation's mix of payment styles.</td><td>Stated so the −88% can be checked and re-run with other numbers</td></tr>
+</table>
+
+<h2>2. Core workflows delivered</h2>
+<table>
+  <tr><th style="width:23%">Screen</th><th style="width:12%">Role</th><th>What it does</th></tr>
   <tr><td>Sign in</td><td>All</td><td>Mobile number and a one-time code, linked to a flat (owner, tenant or family)</td></tr>
   <tr><td>Resident home</td><td>Resident</td><td>Dues with a breakdown, open complaints and today's visitors; every action within two taps</td></tr>
   <tr><td>Bills and test payment</td><td>Resident</td><td>Area × rate, late interest, a six-month chart, test-mode checkout, numbered receipt with PDF, ledger</td></tr>
   <tr><td>Raise a complaint</td><td>Resident</td><td>Text and photo; AI category and urgency; safety rule</td></tr>
   <tr><td>Complaint status</td><td>Resident</td><td>Timeline, assignee, response timer; rate the fix or reopen</td></tr>
   <tr><td>Help desk queue</td><td>Help desk</td><td>Sorted by safety, urgency and deadline; auto-assignment; one-tap category change; linked duplicates</td></tr>
-  <tr><td>Bank matching</td><td>Accounts</td><td>The hard part: bank CSV in; confident credits post, unclear ones queue with evidence</td></tr>
-  <tr><td>Committee report</td><td>Committee</td><td>Collections, dues ageing, complaint times, the brief's targets; signed and frozen monthly</td></tr>
+  <tr><td>Bank matching</td><td>Accounts</td><td>The hard part: bank CSV in; confident credits post, the rest queue with evidence (section 5)</td></tr>
+  <tr><td>Committee report</td><td>Committee</td><td>Collections, dues ageing, complaint times and the brief's three measures; signed and frozen monthly</td></tr>
 </table>
 
-<h3>2.2 Every "must have" from the brief</h3>
+<h3>2.1 UI and design decisions</h3>
+<p>The brief asks for minimal design that counts as much as features: clean layouts, white space, a restrained palette, clear type, nothing without a purpose, every action within two taps. The choices, and why:</p>
+<ul>
+  <li><b>One accent, for the next action.</b> Warm neutrals with a lilac button and plum links; six soft tints only to tell categories, people and amenities apart; green, amber and red reserved for state. The eye finds the one thing to do.</li>
+  <li><b>The home screen is the brief's sentence:</b> dues (with "What is in this" for the breakdown), four quick actions, open complaints with named steps, today's visitors with approve in one tap.</li>
+  <li><b>Interactions that explain:</b> a tapped month in Bills shows its sum (980 sq ft × ₹6.50); a waiting visitor pulses; guest codes count down. CSS only, and off when the device asks for reduced motion.</li>
+  <li><b>Type for moments:</b> a display serif for greetings, titles and big amounts; Inter for reading. <b>Themes:</b> light, and a warm dark mode. <b>States:</b> skeletons while loading, written empty states, errors that say what to do. <b>Phone first</b>, with a sidebar and two columns from 960 px.</li>
+  <li><b>The desk is denser,</b> for a working day; the committee report leads with the brief's three measures, from their baselines.</li>
+</ul>
+<div class="two">
+  <figure><img src="img/res-home.jpg" alt=""><figcaption>Resident home: dues first, with overdue days and interest stated.</figcaption></figure>
+  <figure><img src="img/report-goals.jpg" alt=""><figcaption>Committee report: the brief's three success measures, each from its baseline to its target, with automatic matching shown separately as an operational figure, not a target.</figcaption></figure>
+</div>
+
+<h2>3. How we know each core workflow works</h2>
 <table>
-  <tr><th style="width:30%">Must have</th><th>How it is built</th></tr>
-  <tr><td>Installable web app; OTP login linked to a flat; family and tenant members; notices</td><td>A web app (manifest, service worker, PNG and maskable icons, shortcuts) with a Download app button: the browser's install prompt on Chrome and Edge, the steps on Safari, hidden once installed. Owners and tenants add household members; notices on the home screen</td></tr>
-  <tr><td>Billing by area and rate; late fees per bye-laws; online payment (test mode); bank matching; receipts and a ledger per flat</td><td>Monthly bill runs (area × rate copied at issue), simple interest on overdue principal (A2), a test gateway that follows Razorpay's steps, the matcher (section 7), gapless receipts with PDFs, an append-only ledger per flat</td></tr>
-  <tr><td>Complaints: category, photo, auto-assignment, response timer, status updates, rating on closure</td><td>All of these; technicians by category and tower; response targets per urgency (A6); the resident rates or reopens</td></tr>
-  <tr><td>Gate: tablet entry with photo, resident approval, pre-approved guest codes</td><td>A paired tablet with a guard PIN, photo capture, a push to the flat, guest codes; an offline queue</td></tr>
-  <tr><td>Amenity booking with slots, rules and fees</td><td>Slots and capacity, per-booking and weekly limits, booking window, fees on the bill, free cancellation until a cut-off, closed days that refund</td></tr>
-  <tr><td>Committee dashboard: collections, dues ageing, complaint times</td><td>The committee report, with the brief's targets, CSV and print, and a signed, fingerprinted month</td></tr>
+  <tr><th style="width:20%">Core workflow</th><th style="width:36%">Implementation</th><th>Evidence (<span class="m">measured</span>, reproducible)</th></tr>
+  <tr><td>Resident sign-in</td><td>One-time codes, hashed, rate-limited, linked to a flat</td><td><code>api.test</code>: single-use codes, lock after five wrong tries, three an hour, same reply for unknown numbers, expired sessions refused; every browser test signs in</td></tr>
+  <tr><td>Maintenance billing</td><td>Area × rate copied at issue; daily simple interest; interest first, then oldest bill; bill runs approved by a second person</td><td><code>billing.test</code>: the brief's three flats match its table exactly; interest; allocation; exact rounding; bill runs. <code>governance.test</code>: issued only after approval, at the approved rate</td></tr>
+  <tr><td>Test payment</td><td>Server-priced order, signature check, the gateway's own record, one transaction for payment, ledger, receipt and alert</td><td><code>api.test</code>: signature checked, amount from the gateway, recorded once (callback and webhook); <code>operations.test</code>: the test gateway; PDF receipt</td></tr>
+  <tr><td>Bank reconciliation</td><td>Evidence scoring with reasons; posts only on strong, unambiguous evidence; a second person for manual posts</td><td><code>matching.test</code> and <code>reconciliation.test</code> (section 5.5); the evaluation: 0 wrong posts in 140 credits, −88% time</td></tr>
+  <tr><td>Complaints with assignment and status</td><td>Classifier, safety rule, technician by category and tower, response timer, linked duplicates, rate or reopen</td><td><code>complaints.test</code>; the browser test "complaint raised, resolved and rated"; the evaluation for triage (section 6)</td></tr>
+  <tr><td>Committee view</td><td>Report from the ledger; the brief's three measures; sign-off with a fingerprint</td><td><code>governance.test</code>: a signed month is frozen and verified; a unit test pins the matching-time calculation; the browser test signs the report</td></tr>
+  <tr><td>Access control</td><td>Roles declared on every route; residents scoped to their flat; two-person rules in the database</td><td><code>api.test</code>: roles reach only their areas; <code>reconciliation.test</code>: the database refuses self-approval</td></tr>
 </table>
 
-<h3>2.3 The brief's constraints and design asks</h3>
-<table>
-  <tr><th style="width:30%">The brief says</th><th>How it is met</th></tr>
-  <tr><td>DPDP Act: delete visitor photos after 90 days; a notice at gates</td><td>A scheduled job deletes them; the notice is on the gate tablet and printable for each gate; consent at first sign-in, data download, correction and erasure</td></tr>
-  <tr><td>Billing and late interest per Maharashtra co-operative bye-laws</td><td>Rate, due day and interest rate are settings; A2 and A3 state the reading</td></tr>
-  <tr><td>Gate tablets keep working through network drops</td><td>Entries queue on the tablet with a client id and sync when the network returns; the server ignores repeats (section 12)</td></tr>
-  <tr><td>English, Marathi and Hindi</td><td>All three in the resident app and gate tablet; the safety rule and classifier read all three</td></tr>
-  <tr><td>Most bills are paid in the first 10 days</td><td>Due on the 10th (A3); the load test is sized from that peak</td></tr>
-  <tr><td>Minimal design; home shows dues, open complaints, today's visitors; two taps; guard screens with very large buttons that read at night</td><td>Section 8</td></tr>
-  <tr><td>Out of scope: accounting beyond maintenance, CCTV and barriers, a marketplace</td><td>Not built; Tally stays, and the app exports a Tally import file</td></tr>
-</table>
-
-<h2>3. Assumptions</h2>
-<p>Given by the brief, so not assumptions: ₹6.50 per sq ft a month; the three sample flats; late fees under the bye-laws; visitor photos deleted after 90 days with a gate notice; English, Marathi and Hindi; mocked payments and messages; most bills paid in the first 10 days. Where the brief is silent, I chose, and each choice is a setting or one function:</p>
-<table>
-  <tr><th style="width:6%">#</th><th style="width:52%">Assumption</th><th>Why</th></tr>
-  <tr><td>A1</td><td>"Days overdue" counts from the oldest unpaid due date, so T12-0408 (47 days) also owes the next month.</td><td>The only reading where the sample row and a monthly bill agree</td></tr>
-  <tr><td>A2</td><td>Late fee means simple interest on overdue principal; payments clear interest first, then the oldest bill. The 21% a year used is a configurable demonstration rate; the actual applicable rate must be confirmed against the federation's adopted bye-laws before production.</td><td>The brief says only "late fees per bye-laws"; simple interest on principal avoids interest on interest</td></tr>
-  <tr><td>A3</td><td>Bills are raised on the 1st and due on the 10th; opening arrears carry no interest in the app.</td><td>Matches the payment pattern; old arrears' interest cannot be recomputed reliably</td></tr>
-  <tr><td>A4</td><td>Bank statements are CSV exports; UPI narrations carry the payer name, UPI ID and UTR, sometimes a flat number.</td><td>How HDFC, SBI and ICICI exports look; columns are found by heading</td></tr>
-  <tr><td>A5</td><td>A credit posts automatically only on a flat number or registered UPI ID, a score of 80+ and a lead of 30 over the next flat.</td><td>The brief: unclear payments are never posted automatically</td></tr>
-  <tr><td>A6</td><td>Response targets: 15 min critical, 2 h high, 8 h medium, 24 h low; one duty-manager number.</td><td>A starting point the admin can change</td></tr>
-  <tr><td>A7</td><td>Roles beyond the core two: accounts, committee, admin, guard.</td><td>The other must-haves, and "the committee approves", need them</td></tr>
-  <tr><td>A8</td><td>Money decisions need two different people (bill runs, manual posts, adjustments, login-number changes).</td><td>What makes a report "trustworthy" to a committee</td></tr>
-  <tr><td>A9</td><td>Receipts are numbered without gaps per financial year: <code>RCT/2026-27/00001</code>.</td><td>Indian practice; auditors look for gaps</td></tr>
-  <tr><td>A10</td><td>Each of the 4 gates has one tablet, paired once; guards share tablets across shifts and sign in with a PIN.</td><td>Paper registers today mean one point of entry per gate</td></tr>
-  <tr><td>A11</td><td>One server is enough for one township: about 8 requests a second at the bill-day peak.</td><td>2,400 flats, most paying in 10 days (section 13)</td></tr>
-  <tr><td>A12</td><td>For the matching evaluation: the mix of payment styles, and 2 minutes to match a row by hand, 30 seconds to confirm a right suggestion.</td><td>Stated so the 88% can be checked and re-run with other numbers</td></tr>
-</table>
-
-<h2>4. Architecture (high-level design)</h2>
+<h2>4. Architecture and technology decisions</h2>
 <div class="diagram">
 <pre class="mermaid">
 flowchart LR
   R["Resident app<br/>phone · desktop"] --> API
   D["Staff desk"] --> API
   G["Gate tablet<br/>offline queue"] --> API
-  L["Front page<br/>/welcome"] --> API
   subgraph S["One Node.js process"]
     API["Express API<br/>roles · validation · rate limits"]
     W["Outbox worker"]
@@ -157,21 +153,21 @@ flowchart LR
 </pre>
 <div class="cap">React and Vite on the client; Node 20, Express and PostgreSQL 16 on the server; one Docker image, deployed on Render. Dotted lines are paid services, replaced by labelled placeholders when no credentials are set.</div>
 </div>
-<p>The shape follows from the numbers: one township, about 8 requests a second at peak, money that must never be wrong, and a team of one. A single process with clear modules and one database gives transactions across everything that must change together (a payment, its ledger line, its receipt number and its alert), one thing to deploy, and nothing to keep in sync. The decisions, in the usual ADR form:</p>
+<p>The shape follows from the numbers: one township, about 8 requests a second at peak, money that must not be wrong, and one developer. A single process with clear modules and one database gives transactions across everything that must change together (a payment, its ledger line, its receipt number and its alert), one thing to deploy, and nothing to keep in sync.</p>
 <div class="adr"><h3>ADR-1 · One modular service, not microservices</h3>
-<p><b>Context:</b> one township peaks at about 8 requests a second. <b>Decision:</b> one Node process with modules (billing, matcher, complaints, notify, amenities, report). <b>Consequences:</b> one deploy and no network between services; the load test reaches 270–300 requests a second on one process, and the app is stateless, so more processes can be added (section 13).</p></div>
+<p><b>Context:</b> one township peaks at about 8 requests a second. <b>Decision:</b> one Node process with modules (billing, matcher, complaints, notify, amenities, report). <b>Consequences:</b> one deploy and no network between services; the app is stateless, so more processes can be added (section 4.4).</p></div>
 <div class="adr"><h3>ADR-2 · PostgreSQL, with the ledger append-only in the database</h3>
-<p><b>Context:</b> the committee needs a report it can trust. <b>Decision:</b> bills and payments write ledger lines in one transaction; triggers block updates and deletes; the app's database role cannot switch them off. <b>Consequences:</b> mistakes are corrected by new adjustment lines; <code>cli verify</code> proves the books balance and receipts have no gaps.</p></div>
+<p><b>Context:</b> the committee needs a report it can trust. <b>Decision:</b> bills and payments write ledger lines in one transaction; triggers block updates and deletes; the app's database role cannot switch them off. <b>Consequences:</b> mistakes are corrected by new adjustment lines; <code>cli verify</code> checks the books balance and receipts have no gaps.</p></div>
 <div class="adr"><h3>ADR-3 · Payment matching by explained rules, not a model</h3>
-<p><b>Context:</b> a wrong match puts money on the wrong flat. <b>Decision:</b> score each credit with reasons; post only on strong, unambiguous evidence; queue the rest for a person, with a second person approving. <b>Consequences:</b> every post is repeatable and auditable; no wrong posts in the evaluation.</p></div>
+<p><b>Context:</b> a wrong match puts money on the wrong flat. <b>Decision:</b> score each credit with reasons; post only on strong, unambiguous evidence; queue the rest for a person, with a second person approving. <b>Consequences:</b> every post is repeatable and auditable.</p></div>
 <div class="adr"><h3>ADR-4 · Complaint triage by LLM, with a rule above it and a local fallback</h3>
-<p><b>Context:</b> a wrong category costs a tap; a missed gas leak does not bear thinking about. <b>Decision:</b> safety words escalate by rule first; Claude classifies with a fixed schema; a local keyword model runs without a key or on any error. <b>Consequences:</b> a complaint is never blocked by the network, and the AI is never the last word on safety.</p></div>
+<p><b>Context:</b> a wrong category costs a tap; a missed gas leak is dangerous. <b>Decision:</b> safety words escalate by rule first; Claude classifies with a fixed schema; a local keyword model runs without a key or on any error. <b>Consequences:</b> a complaint is never blocked by the network, and the AI is never the last word on safety.</p></div>
 <div class="adr"><h3>ADR-5 · Messages through a database outbox</h3>
-<p><b>Context:</b> a crash must not lose a visitor alert, or send one for a payment that rolled back. <b>Decision:</b> messages are written in the same transaction as their cause and sent by a worker, urgent first. <b>Consequences:</b> no message queue to run; a visitor alert behind 4,200 bill alerts goes out in 0.9 s.</p></div>
+<p><b>Context:</b> a crash must not lose a visitor alert, or send one for a payment that rolled back. <b>Decision:</b> messages are written in the same transaction as their cause and sent by a worker, urgent first. <b>Consequences:</b> no message queue to run; urgent alerts are not delayed by bulk ones.</p></div>
 <div class="adr"><h3>ADR-6 · An installable web app with one-time-code sign-in</h3>
-<p><b>Context:</b> residents open the app for seconds and forget passwords; the brief asks for an installable web app. <b>Decision:</b> one web app installable on phones and desktops, with push alerts; codes to the registered number; guards use a PIN on a paired tablet. <b>Consequences:</b> no app store, one codebase for every screen size and the gate tablet.</p></div>
+<p><b>Context:</b> residents open the app for seconds and forget passwords; the brief asks for an installable web app. <b>Decision:</b> one web app for phones, desktops and the gate tablet; codes to the registered number; guards use a PIN on a paired tablet. <b>Consequences:</b> no app store, one codebase.</p></div>
 
-<h2>5. Data model</h2>
+<h3>4.1 Data model</h3>
 <div class="diagram">
 <pre class="mermaid">
 flowchart LR
@@ -184,211 +180,225 @@ flowchart LR
   K -- "manual post" --> A[approvals]
   F --> C[complaints]
   C -. "duplicate of" .-> C
-  F --> V[visitors]
-  F --> BK[bookings]
 </pre>
-<div class="cap">34 tables in five migrations; the core is shown. A flat's balance is always the sum of its ledger, never a stored number that could drift. Also: bill runs, receipt counters, payment orders, bank imports, complaint events, technicians, guest codes, devices, sessions, OTPs, messages (the outbox), audit log, report sign-offs, amenities and blackouts, register imports, Tally exports, data requests, push subscriptions, notices, settings.</div>
+<div class="cap">The core of the schema; the full schema (34 tables) is in <code>server/migrations</code>, most of it for the optional depth in section 9. A flat's balance is always the sum of its ledger, never a stored number that could drift.</div>
 </div>
 <table>
-  <tr><th style="width:18%">Table</th><th>Columns that matter, and why</th></tr>
-  <tr><td>flats</td><td><code>id</code> like <code>T12-0408</code> (checked by pattern), <code>tower</code>, <code>area</code>, which drives the bill</td></tr>
-  <tr><td>users</td><td><code>phone</code> (unique; the login), <code>role</code>, <code>flat_id</code>, <code>relation</code> (owner, tenant, family), <code>lang</code>, <code>pin_hash</code> for guards</td></tr>
-  <tr><td>bills</td><td><code>period</code>, <code>area</code> and <code>rate</code> copied at issue (a later rate change never rewrites an old bill), <code>amount</code>, <code>due_on</code>; unique per flat and month</td></tr>
+  <tr><th style="width:17%">Table</th><th>Columns that matter, and why</th></tr>
+  <tr><td>bills</td><td><code>period</code>; <code>area</code> and <code>rate</code> copied at issue, so a later rate change never rewrites an old bill; <code>amount</code>; <code>due_on</code>; unique per flat and month</td></tr>
   <tr><td>payments</td><td><code>amount</code>, <code>method</code>, <code>utr</code>, <code>gateway_payment_id</code> (unique), <code>receipt_no</code> (unique, gapless)</td></tr>
-  <tr><td>ledger</td><td><code>kind</code> (bill, interest, payment, amenity, adjustment, opening), <code>debit</code>/<code>credit</code> in whole rupees, a link to what it records</td></tr>
-  <tr><td>bank_rows</td><td><code>narration</code>, <code>utr</code>, <code>status</code> (posted, queue, pending approval, duplicate, reconciled, ignored), <code>score</code>, <code>reasons</code> shown to the treasurer</td></tr>
-  <tr><td>complaints</td><td><code>category</code>, <code>urgency</code>, the AI's own <code>ai_category</code>/<code>ai_confidence</code>/<code>ai_source</code> (kept to measure it), <code>escalated</code>, <code>duplicate_of</code>, <code>due_by</code></td></tr>
-  <tr><td>visitors, bookings</td><td>Visitor <code>status</code> and a unique <code>client_id</code> from the tablet; booking slot, <code>fee</code> and <code>status</code></td></tr>
+  <tr><td>ledger</td><td><code>kind</code> (bill, interest, payment, adjustment…), <code>debit</code>/<code>credit</code> in whole rupees, a link to what it records</td></tr>
+  <tr><td>bank_rows</td><td><code>narration</code>, <code>utr</code>, <code>status</code>, <code>score</code>, <code>reasons</code> and <code>candidates</code> (the evidence shown to the treasurer)</td></tr>
+  <tr><td>complaints</td><td><code>category</code>, <code>urgency</code>, the AI's own guess and confidence (kept to measure it), <code>escalated</code>, <code>duplicate_of</code>, <code>due_by</code></td></tr>
 </table>
-<p><b>Rules the database enforces, not only the app:</b> triggers make <code>ledger</code>, <code>payments</code>, <code>audit_log</code> and <code>report_signoffs</code> append-only; <code>UNIQUE (flat_id, period)</code> stops double billing; <code>UNIQUE gateway_payment_id</code> records a payment once; <code>CHECK (decided_by &lt;&gt; requested_by)</code> stops self-approval; money is integer rupees with non-negative checks; phones and flat ids are checked by pattern.</p>
+<p><b>Rules the database enforces, not only the app:</b> triggers make <code>ledger</code>, <code>payments</code>, <code>audit_log</code> and <code>report_signoffs</code> append-only; <code>UNIQUE (flat_id, period)</code> stops double billing; <code>UNIQUE gateway_payment_id</code> records a payment once; <code>CHECK (decided_by &lt;&gt; requested_by)</code> stops self-approval; money is integer rupees with non-negative checks.</p>
 
-<h2>6. Main flows</h2>
+<h3>4.2 Low-level design</h3>
+<p><b>Modules.</b> <code>server/routes/</code> is HTTP only (auth, resident, desk, gate, admin): each route declares its roles, validates input and calls <code>server/lib/</code>, which holds the rules: <code>billing</code>, <code>billruns</code>, <code>matcher</code>, <code>matchtime</code>, <code>approvals</code>, <code>complaints</code>, <code>classifier</code>, <code>report</code>, <code>notify</code>, <code>auth</code>, <code>audit</code>. <code>db.js</code> provides a pool and <code>tx()</code> (nested calls join the outer transaction). <code>web/src/</code> holds the resident, desk and gate pages, the front page, and shared UI.</p>
+<p><b>A request's life.</b> Security headers → body limits → maintenance gate (section 9) → session lookup by token hash → role check → input validation → the library function, inside <code>tx()</code> when it changes data → audit entry and outbox messages in the same transaction → JSON. Errors become a plain message and a status code.</p>
+<p><b>Key algorithms.</b> <i>Interest:</i> daily simple interest on each bill's unpaid principal after its due date, rounded to rupees, posted as a ledger line before any payment, so a payment clears interest first. <i>Receipts:</i> one counter row per financial year, incremented in the same statement that inserts the payment. <i>Matching:</i> section 5. <i>Duplicates:</i> an open complaint in the same category and tower in the last 48 hours, about a shared asset (such as a lift) or with word overlap of 0.3+, is linked. <i>Sign-off:</i> the month's figures frozen as JSON with a SHA-256 fingerprint, re-checked on every view.</p>
+<table>
+  <tr><th style="width:17%">States</th><th></th></tr>
+  <tr><td>Complaint</td><td>open → assigned → in progress → resolved → closed (rated); a reopen sends a resolved complaint back to work and is counted</td></tr>
+  <tr><td>Bank row</td><td>posted · queue → pending approval → resolved · duplicate · reconciled · ignored</td></tr>
+  <tr><td>Bill run</td><td>draft → issued (when a second person approves) · draft → rejected</td></tr>
+</table>
+<p><b>API, by area.</b> Auth: <code>/auth/otp</code>, <code>/auth/verify</code>. Resident: <code>/home</code>, <code>/bills</code>, <code>/pay/order</code>, <code>/pay/verify</code>, <code>/receipts/:id/pdf</code>, <code>/complaints</code> (+ <code>rate</code>, <code>reopen</code>). Desk: <code>/desk/complaints</code>, <code>/desk/bank/import</code>, <code>/desk/bank/queue</code>, <code>/desk/bank/rows/:id/post</code>, <code>/desk/approvals/:id/approve</code>, <code>/desk/bill-runs</code>, <code>/desk/report</code>. Payments: <code>/payments/razorpay/webhook</code> (signed). The optional-depth routes are listed in section 9.</p>
+
+<h3>4.3 Technology choices</h3>
+<table>
+  <tr><th style="width:22%">Choice</th><th>Why</th></tr>
+  <tr><td>PostgreSQL</td><td>Transactions, row locks, unique and check constraints, triggers: the money rules live in the database</td></tr>
+  <tr><td>Node 20 and Express</td><td>One language with the client; small, well understood; enough for the load by a wide margin</td></tr>
+  <tr><td>React and Vite</td><td>One codebase for phone, desk, tablet and front page; the front page is split out so the app stays light</td></tr>
+  <tr><td>Render (free plan)</td><td>A live demo from the existing Dockerfile at no cost; the same image runs anywhere</td></tr>
+</table>
+
+<h3>4.4 Scaling</h3>
+<p><span class="m">measured</span> One process handles 270–300 requests a second against a bill-day peak of about 8, so one township has wide headroom. The API is stateless: sessions, rate-limit counters and the outbox live in PostgreSQL, and all locking is in the database (section 5.4), so more processes can run behind a load balancer without code changes. Next steps by growth: more processes and a connection pooler for a busier township; monthly partitions and archiving for <code>visitors</code>, <code>messages</code> and <code>ledger</code> over years; a read replica for the report and Tally export; a <code>township_id</code> with row-level security, or a database per township, to serve many. What would bind first is database write throughput for very large bill runs across many townships.</p>
+
+<h2>5. Financial reconciliation and safety</h2>
+<p>This is the brief's hard part, so it carries the most safeguards and the most evidence.</p>
 <div class="flows">
 <div>
-<h3>Bank statement matching (the hard part)</h3>
+<h3>5.1 How a credit is decided</h3>
 <div class="diagram">
 <pre class="mermaid">
 flowchart TD
   A[Bank CSV] --> B{"UTR seen?"}
-  B -- yes --> X[Skip]
+  B -- yes --> X[Duplicate: skip]
   B -- no --> C{"Payout or debit?"}
   C -- yes --> Y[Reconcile or ignore]
   C -- no --> D[Score flats]
-  D --> E{"Sure?"}
+  D --> E{"Strong and clear?"}
   E -- yes --> F[Post + receipt]
   E -- no --> Q[Queue with reasons]
   Q --> H[Person picks] --> I[Second person approves] --> F
 </pre>
-<div class="cap">"Sure" means a flat number or registered UPI ID, a score of 80+, a lead of 30+, and no other flat with strong evidence.</div>
 </div>
 </div>
 <div>
-<h3>Complaint triage</h3>
+<table>
+  <tr><th>Evidence</th><th>Points</th></tr>
+  <tr><td>Flat number in the reference</td><td>+60 strong</td></tr>
+  <tr><td>Registered UPI ID</td><td>+50 strong</td></tr>
+  <tr><td>Amount equals the flat's dues</td><td>+30</td></tr>
+  <tr><td>Amount equals one month's bill</td><td>+20</td></tr>
+  <tr><td>Payer name matches a resident</td><td>+15</td></tr>
+  <tr><td>Part payment of what is due</td><td>+5</td></tr>
+  <tr><td>Far above dues (over 3×)</td><td>−40</td></tr>
+</table>
+<p class="cap">"Strong and clear" (A5): strong evidence, a score of 80+, a lead of 30+ over the next flat, and no other flat with strong evidence. Name or amount alone never posts.</p>
+</div>
+</div>
+<div class="note">Automated posting is restricted by matching-confidence and competing-evidence safeguards. Ambiguous or conflicting transactions are routed for human review, and a manual post takes effect only when a second person approves it. <span class="m">measured</span> In the evaluation, 0 of 140 test credits were posted to the wrong flat; that is a result on the tested statements, not a proof for every possible statement.</div>
+
+<h3>5.2 Payments, receipts and the ledger</h3>
+<p>The server creates the gateway order for the amount it computes (never the browser's); after checkout it checks the signature and fetches the payment from the gateway; then the payment, its ledger line, its receipt number and its alert are written in one transaction. A signed webhook covers residents who close the app mid-payment, and either path records the payment once. Receipt numbers come from a counter row updated in the payment's own transaction, not a PostgreSQL sequence, so a failed payment gives its number back and receipts have no gaps.</p>
+
+<h3>5.3 Matching time: how −88% is calculated</h3>
+<p>One model (<code>server/lib/matchtime.js</code>) is used by both the committee report, on real imports, and the evaluation, on statements with known flats, with the minutes in A12. <span class="m">measured</span> On the evaluation's 140 maintenance credits:</p>
+<table>
+  <tr><th style="width:44%">Step</th><th>Value</th></tr>
+  <tr><td>By hand: every credit at 2 minutes</td><td>140 × 2 = 280 minutes</td></tr>
+  <tr><td>With the app: 77 posted (0 min), 62 queued with the right top suggestion (0.5 min), 1 queued without it (2 min)</td><td>0 + 31 + 2 = 33 minutes</td></tr>
+  <tr><td>Saved</td><td>(280 − 33) ÷ 280 = 88.2%, against the brief's target of 80%</td></tr>
+</table>
+<p class="muted">The minutes are assumptions (A12); with 1 minute to confirm a suggestion instead of 0.5, the saving is about 77%. <code>npm run eval</code> prints the inputs, so other numbers can be tried.</p>
+
+<h3>5.4 What can collide, and what stops it</h3>
+<p>Each guarantee is enforced by PostgreSQL (row locks, unique constraints, advisory locks), so it holds with many users and several processes.</p>
+<table>
+  <tr><th style="width:36%">Race</th><th>What stops it</th></tr>
+  <tr><td>The checkout callback and the webhook arrive together</td><td>Both lock the payment order row; the second returns the same receipt; <code>UNIQUE gateway_payment_id</code> backs it up</td></tr>
+  <tr><td>Two payments for one flat at once</td><td>The flat row is locked while interest is posted and the payment allocated</td></tr>
+  <tr><td>Two receipts with the same number</td><td>The counter row is incremented in the payment's own statement; its row lock serialises payments</td></tr>
+  <tr><td>Two statement imports, or the same one twice</td><td>An advisory lock allows one import at a time; UTRs already imported are duplicates</td></tr>
+  <tr><td>Two people resolve one queued credit</td><td>The bank row and approval are locked; one pending approval per row (partial unique index); no self-approval (CHECK)</td></tr>
+  <tr><td>A bill run retried or issued twice</td><td><code>UNIQUE (flat_id, period)</code> with <code>ON CONFLICT DO NOTHING</code>; one open run per month; the run row locked while approved</td></tr>
+</table>
+
+<h3>5.5 Proven by tests</h3>
+<ul>
+  <li><b>Ambiguous credits wait for a person:</b> name or amount alone never posts; two strong signals for different flats queue; queued credits carry no payment and say why (<code>matching.test</code>, <code>reconciliation.test</code>).</li>
+  <li><b>Duplicate imports create nothing:</b> importing the same statement twice adds no payment, ledger line, credit or audit entry (<code>reconciliation.test</code>).</li>
+  <li><b>Failed transactions leave nothing behind:</b> a payment that fails after being written leaves no payment, ledger line or audit entry and an unchanged receipt counter; the next payment takes the next number (<code>reconciliation.test</code>).</li>
+  <li><b>Approvals are enforced:</b> the requester cannot approve their own post through the app or directly in the database (<code>api.test</code>, <code>reconciliation.test</code>).</li>
+  <li><b>Every money decision is audited and the audit cannot be edited:</b> a manual post is audited as requested, approved and recorded; adjustments are audited; the ledger, payments and audit log reject updates and deletes (<code>reconciliation.test</code>, <code>billing.test</code>, <code>governance.test</code>).</li>
+</ul>
+<figure><img src="img/desk-matching.jpg" alt="" style="max-width:60%"><figcaption>A credit whose narration names T10-1707 while its UPI ID is registered to T09-1802: two strong signals disagree, so it is queued with both flats and their evidence instead of being posted.</figcaption></figure>
+
+<h2>6. AI complaint classification and evaluation</h2>
+<div class="flows">
+<div>
 <div class="diagram">
 <pre class="mermaid">
 flowchart TD
   A[Complaint] --> B{"Safety words?"}
   B -- yes --> C["Critical, SMS duty manager"]
   B -- no --> D["Claude or local model"]
-  D --> E{"Sure?"}
+  D --> E{"Confidence 0.6+?"}
   E -- no --> F["Desk sees 'AI unsure'"]
   E -- yes --> G[Assign by category and tower]
   F --> G
   C --> G
   G --> H[Link duplicates] --> I["Resolve, then rate or reopen"]
 </pre>
-<div class="cap">"Sure" is confidence of 0.6 or more. Safety words: fire, gas, lift stuck, shock, in three languages.</div>
 </div>
 </div>
-</div>
-<p><b>Payment:</b> the server creates the gateway order for the amount it computes (never the browser's); after checkout it checks the signature and fetches the payment from the gateway; then the payment, ledger line, receipt number and alert are written in one transaction. A signed webhook covers residents who close the app mid-payment, and either path records the payment exactly once. <b>Bill run:</b> accounts prepares a month's bills (a draft); a committee member who did not prepare it approves; only then are bills issued, at the draft's rate, and residents alerted. <b>Gate:</b> the guard logs a visitor; the flat gets a push; the resident approves or denies; offline, entries wait on the tablet and sync later.</p>
-
-<h2>7. The AI and automation</h2>
+<div>
 <table>
-  <tr><th style="width:40%">The brief requires</th><th>Built as</th></tr>
-  <tr><td>Match bank rows by amount, reference and UPI ID</td><td>An evidence score: flat number in the reference +60, registered UPI ID +50, amount equals dues +30 (one month's bill +20), payer name +15, part payment +5; far above dues −40</td></tr>
-  <tr><td>Unclear payments go to a queue, never posted automatically</td><td>Name or amount alone never posts; rival strong evidence queues; a manual post needs a second person</td></tr>
-  <tr><td>Classify complaints by category and urgency</td><td>Claude with a fixed category list and a JSON schema; refusals, invalid answers or an 8 s timeout fall back to the local model</td></tr>
-  <tr><td>The help desk changes a category in one tap</td><td>A category menu; below 0.6 confidence the complaint is flagged "AI unsure"; the AI's guess is kept</td></tr>
-  <tr><td>Fire, gas, lift stuck, shock always escalate</td><td>A rule before the AI, in English, Hindi and Marathi; critical urgency that cannot be lowered; SMS to the duty manager</td></tr>
-  <tr><td>Link duplicates, never close them</td><td>Same category and tower within 48 hours, about a shared asset or in similar words: linked to the main complaint, whose updates reach every flat; each flat closes and rates its own</td></tr>
+  <tr><th>The brief requires</th><th>Built as</th></tr>
+  <tr><td>Category and urgency from free text</td><td>Claude with a fixed category list and a JSON schema; refusals, invalid answers or an 8 s timeout fall back to the local model</td></tr>
+  <tr><td>One-tap category change</td><td>A category menu; "AI unsure" below 0.6; the AI's guess is kept</td></tr>
+  <tr><td>Fire, gas, lift stuck, shock always escalate</td><td>A rule before the AI, in three languages; critical urgency that cannot be lowered</td></tr>
+  <tr><td>Duplicates linked, never closed</td><td>Linked to the main complaint; each flat closes and rates its own</td></tr>
 </table>
-<h3>Measured, not assumed (<code>npm run eval</code>, docs/evaluation.md)</h3>
+</div>
+</div>
 <table>
-  <tr><th style="width:56%">Complaint triage: 90 labelled complaints in English, Hindi, Marathi, Hinglish</th><th>Local model</th></tr>
-  <tr><td>Category right; right when the model says it is sure</td><td>81%; 100% (for 35% of complaints)</td></tr>
+  <tr><th style="width:62%"><span class="m">measured</span> 90 labelled complaints (EN, HI, MR, Hinglish), local model</th><th>Result</th></tr>
+  <tr><td>Category right; right when the model says it is sure (35% of complaints)</td><td>81%; 100%</td></tr>
   <tr><td>Flagged "AI unsure" for the help desk to check</td><td>64%</td></tr>
   <tr><td>Hazards escalated; false alarms</td><td>14 of 14; 0</td></tr>
-  <tr><th>Bank matching: 5 statements, 140 credits with known flats, 30 other rows</th><th>Result</th></tr>
-  <tr><td>Posted automatically; <b>posted to the wrong flat</b></td><td>55%; <b>0</b></td></tr>
-  <tr><td>Queued with the right flat as the top suggestion</td><td>98% (100% in the top three)</td></tr>
-  <tr><td>Matching time against doing it by hand (target −80%)</td><td>−88% (A12)</td></tr>
 </table>
-<p><b>Honest confidence.</b> The local model reports the share of matched keywords discounted by <code>1 − 0.5<sup>n</sup></code>, so one keyword gives about 50%, not 100%. <b>What the first evaluation found and fixed:</b> Hindi and Marathi words were split on their vowel signs, so their keywords never matched (50% right; now 86% and 71%); the Marathi "अडकले" (stuck) was missed; "लिफ्ट बंद" (the lift is off) and "fire lane" raised false alarms. The labels follow the urgency rules given to the model, not its keyword list, so the score is not rigged; a test keeps the key promises as floors.</p>
-<figure><img src="img/desk-matching.jpg" alt="" style="max-width:62%"><figcaption>A credit whose narration names T10-1707 while its UPI ID is registered to T09-1802: two strong signals disagree, so it is queued with both flats and their evidence instead of being posted.</figcaption></figure>
+<p>The labels follow the urgency rules given to the model, not its keyword list, so the score is not tuned to the model. <b>Honest confidence:</b> the local model discounts thin evidence (<code>1 − 0.5<sup>n</sup></code>), so one keyword gives about 50%, not 100%; it is cautious, which costs the help desk a tap, not a wrong job. <b>What the first run found and fixed:</b> Hindi and Marathi words were split on their vowel signs (50% right; now 86% and 71%); the Marathi "अडकले" (stuck) was missed; "लिफ्ट बंद" (the lift is off) and "fire lane" raised false alarms. With a Claude key, <code>npm run eval -- --claude</code> scores Claude on the same set.</p>
 
-<h2>8. UI and design decisions</h2>
-<p>The brief asks for minimal design that counts as much as features: clean layouts, white space, a restrained palette, clear type, nothing without a purpose, every action within two taps. The thinking behind each choice:</p>
+<h2>7. Security, auditability and permissions</h2>
+<table>
+  <tr><th style="width:15%">Role</th><th>Can do</th></tr>
+  <tr><td>Resident</td><td>Own flat only: pay, complain, approve visitors, guest codes, book, add family</td></tr>
+  <tr><td>Help desk</td><td>Complaints; correcting residents' details (audited)</td></tr>
+  <tr><td>Accounts</td><td>Bank matching, approvals, flats and ledgers, bill runs, adjustments</td></tr>
+  <tr><td>Committee</td><td>The report; approves bill runs; signs off months</td></tr>
+  <tr><td>Admin</td><td>All of the above, plus staff, tablets, settings, the audit log, the demo reset</td></tr>
+  <tr><td>Guard</td><td>The gate console, only on a paired tablet with a PIN</td></tr>
+</table>
 <ul>
-  <li><b>One accent, used for the next action.</b> Warm neutrals with a lilac button (dark text on it) and plum for links; six soft tints only to tell categories, people and amenities apart; green, amber and red reserved for state. The eye always finds the one thing to do.</li>
-  <li><b>Type for moments, not decoration.</b> A display serif (Instrument Serif) carries greetings, page titles and big amounts; everything else is Inter for reading.</li>
-  <li><b>The home screen is the brief's sentence:</b> dues (with "What is in this" for the breakdown), four quick actions (pay, report, guest code, book), open complaints with named steps, today's visitors with approve in one tap.</li>
-  <li><b>Small interactions that explain:</b> a tapped month in Bills shows its sum (980 sq ft × ₹6.50); a waiting visitor pulses on a timeline; a guest code counts down; picked booking slots join into one block. CSS only, and off when the phone asks for reduced motion.</li>
-  <li><b>Phone first, desktop proper:</b> bottom tabs on phones; from 960 px a sidebar and a two-column home. The desk is denser, for a working day; the committee report leads with the brief's targets.</li>
-  <li><b>The gate is for night and gloves:</b> always dark, very large buttons, state in colour and words, "Offline · saved on tablet", the DPDP notice on screen.</li>
-  <li><b>Light and dark themes:</b> dark is a warm plum night, not flat black. <b>States:</b> skeletons while loading, written empty states, errors that say what to do. <b>Three languages</b> throughout the resident app and gate.</li>
-  <li><b>A front page</b> (<code>/welcome</code>) tells the product in seven chapters, each its own colour, arriving as sheets; it loads on its own, so the app carries none of its weight. <b>Logo:</b> a T made from a tower between two shorter ones.</li>
-</ul>
-<div class="two">
-  <figure><img src="img/res-home.jpg" alt=""><figcaption>Resident home: dues first, with overdue days and interest stated.</figcaption></figure>
-  <figure><img src="img/gate.jpg" alt=""><figcaption>Gate tablet with the network down: large buttons, dark for night, the offline state, the DPDP notice.</figcaption></figure>
-</div>
-<figure><img src="img/report-goals.jpg" alt=""><figcaption>Committee report: the brief's success measures from where the society started, against the six-month targets.</figcaption></figure>
-
-<h2>9. Security and privacy</h2>
-<ul>
-  <li><b>Sign-in:</b> codes are random, stored as hashes, valid for 5 minutes with 5 tries; at most 3 per number an hour (15 in demo mode) and limits per network address. Unknown numbers get the same reply as known ones, so the endpoint cannot reveal who lives here.</li>
-  <li><b>Sessions:</b> random tokens stored as hashes; 30 days for residents, 12 hours for staff and guards; deactivating a person ends them.</li>
-  <li><b>Access:</b> every route declares its roles; a resident only ever reaches their own flat (every query is scoped by the session's flat); the gate needs a paired tablet and a PIN.</li>
-  <li><b>Inputs and outputs:</b> every route validates its body; CSV exports neutralise spreadsheet formulas; uploads must be real images; a strict Content Security Policy with fonts bundled, so the only third party is the payment gateway.</li>
-  <li><b>Secrets and data:</b> only <code>.env.example</code> is committed; the server refuses to start in production without its required settings. Photos are served through 15-minute signed links. DPDP: consent, data download, correction, erasure (accounts kept as the law requires), visitor photos deleted after 90 days.</li>
+  <li><b>Sign-in and sessions:</b> codes and session tokens stored only as hashes; 5 minutes and 5 tries per code; at most 3 codes per number an hour (15 in demo mode); unknown numbers get the same reply; sessions last 30 days for residents and 12 hours for staff.</li>
+  <li><b>Inputs and outputs:</b> every route validates its body; CSV exports neutralise spreadsheet formulas; uploads must be real images; a strict Content Security Policy.</li>
+  <li><b>Audit:</b> every money decision, correction and reset is written to an append-only audit log (payments and approvals in the same transaction as the change itself); the database role the app uses cannot change it.</li>
+  <li><b>Secrets and data:</b> only <code>.env.example</code> is committed; a scan of all commits found no keys, tokens or <code>.env</code> files; all names, numbers and UPI IDs in the sample data are invented. DPDP: consent, data download, correction, erasure (accounts kept as the law requires), visitor photos deleted after 90 days.</li>
 </ul>
 
-<h2>10. Testing and evaluation</h2>
+<h2>8. Testing and reproducibility</h2>
+<p><span class="m">measured</span> From a fresh clone (<code>git clone</code>, <code>npm ci</code>): <b>62 server tests</b> and <b>6 browser tests</b> pass, and <code>npm run eval</code> gives identical results on repeated runs and matches the committed <code>docs/evaluation.md</code>. The evaluation data is in the repository (<code>server/eval/</code>), and the statements are generated from fixed seeds.</p>
+<table>
+  <tr><th style="width:40%">Command</th><th>What it proves</th></tr>
+  <tr><td><code>npm test</code></td><td>62 server tests: billing, interest, payments, matching, reconciliation safety, complaints, roles, governance, privacy, the demo reset, and the evaluation floors</td></tr>
+  <tr><td><code>npm run test:e2e</code></td><td>6 browser tests in headless Chrome: the main flows, and no browser errors on any page</td></tr>
+  <tr><td><code>npm run eval</code></td><td>Sections 5.3 and 6, written to <code>docs/evaluation.md</code></td></tr>
+  <tr><td><code>npm run load:seed</code> then <code>npm run load:run</code></td><td>The load test below</td></tr>
+</table>
+<p><b>Load test configuration.</b> A seeded township at full size: 2,400 flats in 28 towers, about 4,200 residents, a year of bills and payments, 6,000 complaints, 393,000 gate entries, 150,000 messages. Traffic: 85% residents, 10% gate, 5% desk, at fixed arrival rates up to 40 requests a second (five times the bill-day peak of about 8), then users clicking without pause to find the ceiling; then the heavy jobs are timed. <span class="m">measured</span> on one laptop (Intel Core i3-1220P, 12 threads, 16 GB RAM) with one app process and PostgreSQL 16 on the same machine: 95% of requests under 28 ms at 40 a second with no errors; a ceiling of 270–300 requests a second; a bill run for every flat in 4.1 s; 2,400 bank credits in 17.5 s; the committee report in 1.7 s. These numbers depend on the hardware; the targets (95% under 300 ms, a bill run under 30 s) are checked by the script, which fails if one is missed.</p>
+
+<h2>9. Optional depth and additional features</h2>
+<p>Built from the brief's "must have", tested, and secondary to the core:</p>
 <ul>
-  <li><b>53 server tests:</b> the brief's sample flats, interest, payment allocation, gapless receipts, append-only enforcement, every matching case, safety words in three languages, duplicate linking, role access, two-person approvals, the gate, privacy, and the evaluation floors (every hazard caught, no false alarms, no wrong posts, 80% time saved).</li>
-  <li><b>6 browser tests</b> in headless Chrome: a complaint raised, resolved and rated; a manual post approved by a second person; bills prepared, approved and the report signed; a booking charged; a guard's visitor approved from the phone; no browser errors on any page.</li>
-  <li><b>Load test at full size</b> (2,400 flats, a year of data, 393,000 gate entries): 95% of requests under 28 ms at five times the bill-day peak; a bill run for every flat in 4.1 s; 2,400 bank credits in 17.5 s; one process tops out at 270–300 requests a second.</li>
+  <li><b>Gate visitor management:</b> a paired tablet with a guard PIN, visitor photo, a push to the flat, approve or deny, guest codes; works through network drops (entries queue on the tablet with a client id and sync once; <code>ON CONFLICT (client_id) DO NOTHING</code> keeps one); very large buttons on a dark screen; the DPDP notice on screen; photos deleted after 90 days.</li>
+  <li><b>Amenity booking:</b> slots and capacity, limits, fees on the bill, free cancellation until a cut-off, closed days that refund. Two flats cannot take the last place at once: booking locks the amenity row and re-counts inside the lock.</li>
+  <li><b>Resident extras:</b> family and tenant members, notices, push alerts, English, Marathi and Hindi, and an installable web app with a Download app button (the browser's prompt, or Safari's steps; hidden once installed).</li>
+  <li><b>Office extras:</b> register import from Excel with a preview, Tally export, the message outbox, data requests, the audit log.</li>
+  <li><b>Demo reset</b> (demo mode, admins only): restores the sample township; other requests get "resetting demo data, try again" and requests already running finish first; workers pause; everyone signs in again; every reset stays in the audit log. The pause flag lives in the process, right for the demo's single process.</li>
+  <li><b>Front page</b> (<code>/welcome</code>): explains the product in seven chapters; loaded separately, so the app carries none of it.</li>
+  <li><b>Optional tooling, not a completed production deployment:</b> Terraform for AWS Mumbai (written and checked in CI, never applied) and the load-test scripts.</li>
 </ul>
+<figure><img src="img/gate.jpg" alt="" style="max-width:72%"><figcaption>Gate tablet with the network down: large buttons, dark for night, the offline state, the DPDP notice.</figcaption></figure>
 
-<p class="part">Part B · How it works inside</p>
-
-<h2>11. Low-level design</h2>
-<h3>11.1 Modules</h3>
-<table>
-  <tr><th style="width:24%">Where</th><th>What it owns</th></tr>
-  <tr><td><code>server/routes/</code></td><td>HTTP only: <code>auth</code>, <code>resident</code>, <code>desk</code>, <code>gate</code>, <code>admin</code>. Each route declares its roles and validates its input, then calls a library function</td></tr>
-  <tr><td><code>server/lib/</code></td><td>The rules: <code>billing</code> (bills, interest, allocation, receipts), <code>billruns</code>, <code>matcher</code> and <code>csv</code>, <code>approvals</code>, <code>complaints</code> and <code>classifier</code>, <code>amenities</code>, <code>report</code>, <code>notify</code> (outbox), <code>auth</code>, <code>privacy</code>, <code>audit</code>, <code>tally</code>, <code>receiptPdf</code>, <code>storage</code></td></tr>
-  <tr><td><code>server/db.js</code>, <code>migrations/</code></td><td>A connection pool, <code>tx()</code> (nested calls join the outer transaction), versioned SQL migrations</td></tr>
-  <tr><td><code>server/eval/</code>, <code>test/</code></td><td>The labelled sets and evaluators; the test suites</td></tr>
-  <tr><td><code>web/src/</code></td><td><code>pages/resident</code>, <code>pages/desk</code>, <code>pages/gate</code>, <code>landing/</code> (front page), shared <code>ui.jsx</code>, <code>api.js</code>, <code>i18n.jsx</code>, <code>install.js</code></td></tr>
-</table>
-<h3>11.2 A request's life</h3>
-<p>Security headers → JSON or CSV body limits → session lookup (hash of the bearer token; a paired tablet adds a device token) → role check for the route → input validation → the library function, inside <code>tx()</code> when it changes data → audit entry and outbox messages in the same transaction → JSON response. Errors become a plain message and a status code; nothing internal leaks.</p>
-<h3>11.3 Key algorithms</h3>
-<ul>
-  <li><b>Dues and interest:</b> interest accrues daily on each bill's unpaid principal after its due date, at <code>rate × days / 365</code>, rounded to whole rupees; it is posted as a ledger line before any payment, so a payment always clears interest first, then the oldest bill.</li>
-  <li><b>Receipt numbers:</b> one counter row per financial year, incremented in the same statement that inserts the payment, so numbers are gapless even under concurrency.</li>
-  <li><b>Matching:</b> extract the UTR, UPI ID, flat references in the forms residents write them and name words; score candidate flats; decide (A5). A whole statement is matched against an in-memory index of flats, UPI IDs and dues, refreshed after each post.</li>
-  <li><b>Duplicate complaints:</b> an open complaint in the same category and tower from the last 48 hours, about a shared asset (such as a lift) or with word overlap of 0.3 or more → linked to the main one.</li>
-  <li><b>Committee sign-off:</b> the month's figures are frozen as JSON with a SHA-256 fingerprint, re-checked every time the signed copy is shown.</li>
-</ul>
-<h3>11.4 States</h3>
-<table>
-  <tr><th style="width:18%">Thing</th><th>States</th></tr>
-  <tr><td>Complaint</td><td>open → assigned → in progress → resolved → closed (rated) · a reopen sends a resolved complaint back to work and is counted</td></tr>
-  <tr><td>Bank row</td><td>posted · queue → pending approval → resolved · duplicate · reconciled · ignored</td></tr>
-  <tr><td>Bill run</td><td>draft → issued (when a second person approves) · draft → rejected</td></tr>
-  <tr><td>Visitor</td><td>waiting → approved or denied → inside → left</td></tr>
-</table>
-<h3>11.5 API, by area</h3>
-<p><b>Auth:</b> <code>POST /auth/otp</code>, <code>/auth/verify</code>, <code>/auth/pin</code>, <code>/devices/pair</code>. <b>Resident:</b> <code>/home</code>, <code>/bills</code>, <code>/pay/order</code>, <code>/pay/verify</code>, <code>/receipts/:id/pdf</code>, <code>/complaints</code> (+ <code>rate</code>, <code>reopen</code>), <code>/visitors/:id/decide</code>, <code>/guest-codes</code>, <code>/amenities/:id/availability</code>, <code>/bookings</code>, <code>/household</code>, <code>/me/export</code>. <b>Desk:</b> <code>/desk/complaints</code>, <code>/desk/bank/import</code>, <code>/desk/bank/queue</code>, <code>/desk/bank/rows/:id/post</code>, <code>/desk/approvals/:id/approve</code>, <code>/desk/bill-runs</code>, <code>/desk/report</code>, <code>/desk/tally/export</code>, <code>/desk/register/preview</code>. <b>Gate:</b> <code>/gate/visitors</code>, <code>/gate/code</code>. <b>Admin:</b> users, devices, staff, settings, notices, amenities, data requests, audit, messages. <b>Payments:</b> <code>/api/payments/razorpay/webhook</code> (signed).</p>
-
-<h2>12. Concurrency: what can collide, and what stops it</h2>
-<p>Every guarantee below is enforced by PostgreSQL (row locks, unique constraints, advisory locks), not by timing in the app, so it holds with many users and several server processes.</p>
-<table>
-  <tr><th style="width:34%">Race</th><th>What happens</th></tr>
-  <tr><td><b>Two flats book the last place</b> in the same slot at the same moment</td><td>Booking runs in a transaction that first locks the amenity row (<code>SELECT … FOR UPDATE</code>). The second booking waits, then re-counts the slot and gets "already full". Weekly limits and closed days are checked inside the same lock</td></tr>
-  <tr><td>A booking cancelled twice, or cancelled while being changed</td><td>The booking row is locked; a cancelled booking cannot be refunded again</td></tr>
-  <tr><td><b>The checkout callback and the webhook</b> arrive together for one payment</td><td>Both lock the payment order row; the second sees it is paid and returns the same receipt. <code>UNIQUE gateway_payment_id</code> backs it up</td></tr>
-  <tr><td>Two payments for one flat at once</td><td>The flat row is locked while interest is posted and the payment allocated, so postings never interleave</td></tr>
-  <tr><td>Two receipts get the same number</td><td>The year's counter row is incremented with <code>INSERT … ON CONFLICT DO UPDATE … RETURNING</code> in the same statement as the payment: the row lock serialises it, and a rolled-back payment releases its number with the transaction, so there are no gaps</td></tr>
-  <tr><td>A bill run retried after a crash, or issued twice</td><td><code>UNIQUE (flat_id, period)</code> with <code>ON CONFLICT DO NOTHING</code>; one open run per month (a partial unique index); the run row is locked while approved</td></tr>
-  <tr><td>Two people upload a statement, or the same one twice</td><td>An advisory lock lets one import run at a time; rows whose UTR is already imported are marked duplicate</td></tr>
-  <tr><td>Two people resolve the same queued credit</td><td>The bank row and approval are locked; only one pending approval per row (a partial unique index); nobody approves their own request (a CHECK)</td></tr>
-  <tr><td>Two help-desk staff update one complaint</td><td>The complaint row is locked for the update, so events are written in order</td></tr>
-  <tr><td>Two outbox workers take the same messages</td><td><code>FOR UPDATE SKIP LOCKED</code>: each worker claims a different batch; a batch left by a crashed worker is retried after 5 minutes</td></tr>
-  <tr><td>The gate tablet resends offline entries</td><td>Each entry carries a client id; <code>ON CONFLICT (client_id) DO NOTHING</code> keeps one</td></tr>
-  <tr><td>Two register imports at once</td><td>An advisory lock; nothing is saved until the preview is committed</td></tr>
-</table>
-
-<h2>13. Scaling</h2>
-<p><b>Where it stands.</b> The brief's peak is about 8 requests a second (2,400 flats, most paying in the first 10 days). One process handles 270–300, with 95% of requests under 28 ms at 40 a second, so one township has about 30 times headroom. Heavy jobs are bounded: a bill run for every flat in 4.1 s, a 2,400-row statement in 17.5 s.</p>
-<p><b>Why it scales out without a rewrite.</b> The API is stateless: sessions, rate-limit counters and the outbox live in PostgreSQL, so any number of processes can run behind a load balancer (<code>TRUST_PROXY</code> makes rate limits see real addresses). Outbox workers share the queue with <code>SKIP LOCKED</code>; all locking is in the database (section 12), so correctness does not depend on running one process.</p>
-<table>
-  <tr><th style="width:24%">Growth</th><th>What I would do, in order</th></tr>
-  <tr><td>Busier single township</td><td>More app processes (horizontal); a bigger connection pool (<code>DB_POOL_MAX</code>) or PgBouncer; photos on S3 (already supported) behind a CDN</td></tr>
-  <tr><td>Years of data</td><td>The indexes are in place (migration 004). Next, partition <code>visitors</code>, <code>messages</code> and <code>ledger</code> by month and archive old gate entries; signed reports stay frozen</td></tr>
-  <tr><td>Heavy reports</td><td>Run the committee report and Tally export on a read replica; cache the month's figures once signed (they cannot change)</td></tr>
-  <tr><td>Many townships (a product)</td><td>Add a <code>township_id</code> to every table with row-level security, or one database per township for isolation; one deploy serves all</td></tr>
-  <tr><td>Bill-day spikes in alerts</td><td>The outbox already sends urgent messages first; more workers drain bulk alerts faster without delaying visitor alerts</td></tr>
-  <tr><td>Production hosting</td><td>The Terraform for AWS Mumbai (ECS, RDS with backups and a restore drill, S3) is written and validated in CI; Render's free plan is for the demo</td></tr>
-</table>
-<p><b>What would break first:</b> PostgreSQL write throughput for very large bill runs across many townships, and the single advisory lock for statement imports if many townships share a database. Both have the fixes above: batch inserts per township and a lock per township.</p>
-
-<p class="part">Part C · Thinking, questions and limits</p>
-
-<h2>14. Cut, next and limits</h2>
+<h2>10. Limitations and future improvements</h2>
 <ul>
   <li><b>Cut:</b> WhatsApp (needs Meta business approval); real SMS and payments (mocked, as the brief allows, following the real providers' steps, so switching is configuration); native apps; technician sign-in.</li>
-  <li><b>Next:</b> grow the labelled set from the help desk's corrections and compare Claude on it; remember UPI IDs by default, the biggest lever on automatic matching (family members' IDs are 10% of credits); WhatsApp alerts through the same outbox; bank feeds instead of CSV uploads.</li>
-  <li><b>Limits:</b> the live app is on Render's free plan (it sleeps when idle, though a scheduled ping keeps it awake; photos uploaded there are lost on restart; the free database expires after 30 days); without a Claude key the classifier is keyword-based (81%, and it says when it is unsure); load-tested on one process.</li>
+  <li><b>Limits:</b> the live demo is on Render's free plan (it can sleep, though a scheduled ping keeps it awake; uploaded photos are lost on restart; the free database expires after 30 days, around 4 December 2026). Reviewers share one demo township; an admin can reset it. Without a Claude key the classifier is keyword-based: 81% right, cautious, and it flags what it is unsure of. Load-tested on one process and one laptop. The interest rate is a demonstration rate (A2).</li>
+  <li><b>Next:</b> measure Claude on the labelled set and grow the set from the help desk's corrections; remember UPI IDs by default, the largest lever on automatic matching; WhatsApp alerts through the same outbox; bank feeds instead of CSV uploads; for several processes, keep the maintenance flag in the database.</li>
 </ul>
 
-<h2>15. Questions a reviewer might ask</h2>
-<div class="qa"><b>Why not use an LLM for bank matching too?</b>A wrong match is a wrong flat's money and a committee's trust. Rules give the same answer every time, explain every point, and can be audited; the evaluation shows they post 55% automatically with no wrong posts. An LLM could suggest flats in the queue later, never post.</div>
-<div class="qa"><b>What happens when Claude is down, slow or wrong?</b>Down or slow (8 s): the local model answers and the complaint is saved. Wrong: the help desk sees the confidence and changes the category in one tap; the AI's guess is kept so accuracy can be measured. Dangerous: the safety rule has already escalated it before any model runs.</div>
-<div class="qa"><b>How do you know the AI is any good?</b>Section 7: 90 labelled complaints, scored on the same path a real complaint takes, re-run with <code>npm run eval</code> and held as floors in the tests. It found three real bugs, which were fixed.</div>
-<div class="qa"><b>Can two flats book the same last slot?</b>No. The booking locks the amenity row, re-counts the slot inside the lock and refuses the second (section 12). The same pattern protects payments, receipts, bill runs and approvals.</div>
-<div class="qa"><b>What if the same bank statement is uploaded twice, or a credit is a Razorpay settlement?</b>Rows whose UTR is already imported are marked duplicate and post nothing. Settlements are recognised and reconciled against payments already recorded in the app, so nothing is counted twice.</div>
-<div class="qa"><b>How is interest calculated, and why this way?</b>Simple interest on each bill's overdue principal, daily, posted before a payment so the payment clears interest first (A2). The 21% a year is a configurable demonstration rate, to be confirmed against the federation's adopted bye-laws before production; the brief does not state a rate.</div>
-<div class="qa"><b>How can the committee trust the report?</b>Every rupee is a ledger line the database will not let anyone edit; money decisions need two people; receipts have no gaps; a signed month is frozen with a fingerprint checked on every view; <code>cli verify</code> proves all of it after a restore.</div>
-<div class="qa"><b>What if the gate tablet loses the network?</b>The guard keeps logging; entries wait on the tablet and sync with client ids, so retries never duplicate. Residents still get the alert once the entry reaches the server.</div>
-<div class="qa"><b>How does erasure (DPDP) square with keeping accounts?</b>Erasure closes the account, ends sessions and alerts, and deletes complaint photos and notes; bills, payments and receipts stay, because the society must keep its accounts by law.</div>
-<div class="qa"><b>Why a web app and not native apps?</b>The brief asks for an installable web app; it reaches every phone and desktop from one codebase with no store review, and gets push alerts and an offline shell. The Download app button covers every browser's way of installing.</div>
-<div class="qa"><b>Why one service, and what if it must scale?</b>One township needs a thirtieth of one process. It is stateless, with all locks in the database, so more processes can be added behind a load balancer without changing code (section 13).</div>
-<div class="qa"><b>What is mocked, and how hard is it to make real?</b>SMS, payments and photo storage. Each placeholder follows the real provider's steps (orders, signatures, webhooks), so adding MSG91, Razorpay or S3 credentials switches it on; no code changes.</div>
-<div class="qa"><b>Where did AI tools help, and where were the judgements mine?</b>AI drafted code, tests and copy faster and found gaps. The rules (matching thresholds, two-person checks, the safety rule above the model), the assumptions A1–A12, the evaluation design and the decision to measure rather than claim were judgements I made and can defend.</div>
+<h2>Appendix A. The assignment, point by point</h2>
+<table>
+  <tr><th style="width:36%">The assignment asks for</th><th>Where it is met</th></tr>
+  <tr><td>The core build working end to end</td><td>Sections 2 and 3; the brief's three flats reproduce its table, and a test checks them</td></tr>
+  <tr><td>Main flows on realistic sample data; no dead buttons</td><td>A sample township loads on first start; 6 browser tests click through the main flows and fail on any page error</td></tr>
+  <tr><td>Frontend, backend, database, sign-in, roles</td><td>Sections 4 and 7</td></tr>
+  <tr><td>The AI part works, including when wrong or unsure</td><td>Section 6</td></tr>
+  <tr><td>Polished UI; works on a phone; loading, empty and error states</td><td>Section 2.1</td></tr>
+  <tr><td>Tests; no secrets; validated inputs; access control</td><td>Sections 3, 7 and 8</td></tr>
+  <tr><td>TDD: GitHub URL and live link; architecture and why; data model, flows, AI; UI decisions; cuts and next</td><td>Header; sections 4, 5, 6, 2.1 and 10</td></tr>
+  <tr><td>deployment.md: run locally, how it is deployed, variable names, demo logins</td><td>deployment.md</td></tr>
+  <tr><td>Only the brief; every assumption labelled</td><td>Section 1.3</td></tr>
+  <tr><td>Commit history kept; no secrets or real personal data</td><td>Each change is its own described commit; section 7</td></tr>
+</table>
+
+<h2>Appendix B. Questions a reviewer might ask</h2>
+<div class="qa"><b>Why not use an LLM for bank matching too?</b>A wrong match is a wrong flat's money and a committee's trust. Rules give the same answer every time and explain every point, so they can be audited. An LLM could suggest flats in the queue later, never post.</div>
+<div class="qa"><b>What happens when Claude is down, slow or wrong?</b>Down or slow (8 s): the local model answers and the complaint is saved. Wrong: the help desk sees the confidence and changes the category in one tap; the AI's guess is kept to measure accuracy. Dangerous: the safety rule has already escalated it.</div>
+<div class="qa"><b>Can a payment end up on the wrong flat?</b>Automatic posting needs strong, unambiguous evidence and no rival; everything else goes to a person, and a manual post needs a second person. The evaluation measured no wrong posts in 140 test credits; that is a result on the tested data, which is why the queue and the approvals exist.</div>
+<div class="qa"><b>How exactly is the 88% calculated?</b>Section 5.3: 280 minutes by hand against 33 with the app, using the minutes in A12, from <code>npm run eval</code>. The committee report applies the same model to real imports.</div>
+<div class="qa"><b>What if the same statement is uploaded twice, or a payment fails half-way?</b>Rows whose UTR is already imported post nothing; a failed payment rolls back with its ledger line, audit entry and receipt number. Both are tested (section 5.5).</div>
+<div class="qa"><b>Can two flats book the last slot?</b>No: booking locks the amenity row and re-counts inside the lock. The same pattern protects payments, receipts, bill runs and approvals (section 5.4).</div>
+<div class="qa"><b>Why 21% interest?</b>The brief gives no rate. 21% is a configurable demonstration rate, to be confirmed against the federation's adopted bye-laws before production (A2).</div>
+<div class="qa"><b>How can the committee trust the report?</b>Every rupee is a ledger line the database will not let anyone edit; money decisions need two people; receipts have no gaps; a signed month is frozen with a fingerprint checked on every view.</div>
+<div class="qa"><b>Why so much beyond the core build?</b>The core build came first and has the most tests and the evaluation. The brief lists the rest as optional depth and the assignment counts well-judged depth in favour, so it was built on the same foundations, tested, and kept secondary (section 9).</div>
+<div class="qa"><b>What if two reviewers use the live demo?</b>They share one township. An admin can reset it from the Admin page; other users are paused for the moment it takes, and every reset is kept in the audit log.</div>
+<div class="qa"><b>Where did AI tools help, and where were the judgements yours?</b>AI drafted code, tests and copy faster and found gaps. The rules (matching thresholds, two-person checks, the safety rule above the model), the assumptions, the evaluation design and the decision to measure rather than claim were my judgements.</div>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
 <script>
